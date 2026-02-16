@@ -1,10 +1,11 @@
 import { colors } from "@/constants/colors";
+import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-export default function RegisterScreen() {
+export default function ChatSettingsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
+      <Text style={styles.title}>Chat Settings</Text>
     </View>
   );
 }
@@ -12,11 +13,12 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
+    fontWeight: "600",
     color: colors.textPrimary,
   },
 });
