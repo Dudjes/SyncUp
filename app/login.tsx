@@ -4,7 +4,7 @@ import MainInput from "@/components/ui/mainInput";
 import { colors } from "@/constants/colors";
 import { Link, Stack } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Checkbox from 'expo-checkbox';
 
@@ -51,6 +51,15 @@ export default function LoginScreen() {
         dismissTo asChild>
         <MainButton label="Login" />
       </Link>
+
+      <View style={styles.signupContainer}>
+        <Text style={styles.signupText}>Already have an account? </Text>
+        <Link href="/register" asChild>
+          <Pressable>
+            <Text style={styles.signupLink}>Sign in</Text>
+          </Pressable>
+        </Link>
+      </View>
     </View>
   );
 }
@@ -101,5 +110,21 @@ const styles = StyleSheet.create({
   },
   input: {
     color: colors.textLight,
+  },
+  signupContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    marginBottom: 20,
+    justifyContent: "center",
+  },
+  signupText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  signupLink: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });

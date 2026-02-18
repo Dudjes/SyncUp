@@ -6,7 +6,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Checkbox from "expo-checkbox";
 import { Link, Stack } from "expo-router";
 import React, { useState } from "react";
-import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 
 export default function LoginScreen() {
   const [fullName, setFullName] = useState("");
@@ -94,6 +94,15 @@ export default function LoginScreen() {
         >
           <MainButton label="Create Account" />
         </Link>
+
+        <View style={styles.signupContainer}>
+          <Text style={styles.signupText}>Already have an account? </Text>
+          <Link href="/login" asChild>
+            <Pressable>
+              <Text style={styles.signupLink}>Sign in</Text>
+            </Pressable>
+          </Link>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -130,5 +139,21 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 14,
     color: colors.textPrimary,
+  },
+  signupContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    marginBottom: 20,
+    justifyContent: "center",
+  },
+  signupText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  signupLink: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });
