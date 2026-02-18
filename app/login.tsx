@@ -4,7 +4,7 @@ import MainInput from "@/components/ui/mainInput";
 import { colors } from "@/constants/colors";
 import { Link, Stack } from "expo-router";
 import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Checkbox from 'expo-checkbox';
 
@@ -26,12 +26,16 @@ export default function LoginScreen() {
         label="Email address"
         icon={<MaterialCommunityIcons name="email-outline" size={24} color="black" />}
         example="you@example.com"
+        value={email}
+        onChangeText={setEmail}
       />
       <MainInput 
         label="Password"
-        icon={<MaterialCommunityIcons name="email-outline" size={24} color="black" />}
+        icon={<MaterialCommunityIcons name="lock-outline" size={24} color="black" />}
         example="Enter your password"
         isPassword={true}
+        value={password}
+        onChangeText={setPassword}
       />
 
       <View style={styles.checkboxContainer}>

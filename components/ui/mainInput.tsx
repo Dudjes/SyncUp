@@ -10,11 +10,15 @@ export default function mainInput({
   icon = <AntDesign name="question-circle" size={24} color="white" />,
   example = "This is an example",
   isPassword = false,
+  value,
+  onChangeText,
 }: {
   label: string;
   icon: React.ReactNode;
   example: string;
   isPassword?: boolean;
+  value: string
+  onChangeText:(text: string) => void;
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -27,6 +31,8 @@ export default function mainInput({
           placeholder={example}
           placeholderTextColor={colors.textSecondary}
           style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
           secureTextEntry={isPassword && !isPasswordVisible}
         />
         {isPassword && (
@@ -52,10 +58,10 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textPrimary,
     marginBottom: 8,
-    fontWeight: "400",
+    fontWeight: "500",
   },
   inputContainer: {
     flexDirection: "row",
