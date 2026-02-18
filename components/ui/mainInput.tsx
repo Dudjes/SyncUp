@@ -12,20 +12,22 @@ export default function mainInput({
   isPassword = false,
   value,
   onChangeText,
+  error,
 }: {
   label: string;
   icon: React.ReactNode;
   example: string;
   isPassword?: boolean;
-  value: string
-  onChangeText:(text: string) => void;
+  value: string;
+  onChangeText: (text: string) => void;
+  error?: string;
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, error && styles.inputError]}>
         <View style={styles.iconContainer}>{icon}</View>
         <TextInput
           placeholder={example}
@@ -48,6 +50,7 @@ export default function mainInput({
           </Pressable>
         )}
       </View>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
@@ -84,5 +87,13 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 4,
     marginLeft: 8,
+  },
+  inputError: {
+    borderColor: colors.error ?? colors.error,
+  },
+  errorText: {
+    color: colors.error ?? colors.error,
+    fontSize: 12,
+    marginTop: 6,
   },
 });

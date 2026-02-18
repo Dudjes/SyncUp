@@ -1,3 +1,4 @@
+import { colors } from "@/constants/colors";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
@@ -6,7 +7,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#007AFF",
+        tabBarActiveTintColor: colors.accent,
       }}
     >
       <Tabs.Screen
