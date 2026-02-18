@@ -1,13 +1,15 @@
-import MainHeader from "@/components/headers/MainHeader";
-import MainButton from "@/components/ui/mainButton";
-import { colors } from "@/constants/colors";
 import { Link } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import MainHeader from "@/components/headers/MainHeader";
+import MainButton from "@/components/ui/mainButton";
 import IndexCard from "@/components/ui/indexCard";
+import { colors } from "@/constants/colors";
+
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+
 
 export default function App() {
   return (
@@ -72,6 +74,7 @@ export default function App() {
           </View>
         </View>
       </View>
+      {/* Badges */}
       <View style={[styles.content, styles.contentAlt]}>
         <Text style={styles.heading}>
           Everything you need {"\n"}to stay in sync
@@ -117,6 +120,8 @@ export default function App() {
           }
         />
       </View>
+
+      {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.footerAccent} />
         <Text style={styles.footerTitle}>SyncUp</Text>
