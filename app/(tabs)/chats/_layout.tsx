@@ -18,7 +18,7 @@ export default function ChatsLayout() {
         }}
       />
       <Stack.Screen
-        name="[chatId]"
+        name="[chatId]/index"
         options={{
           title: "Chat",
           headerShown: true,

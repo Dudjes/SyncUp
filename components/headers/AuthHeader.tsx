@@ -5,13 +5,17 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import Entypo from "@expo/vector-icons/Entypo";
 
-export default function AuthHeader() {
+interface AuthHeaderProps {
+  homeRoute?: "/" | "/login" | "/register" | "/chats/";
+}
+
+export default function AuthHeader({ homeRoute = "/" }: AuthHeaderProps) {
   return (
     <View style={styles.header}>
-      <Link href="/" dismissTo asChild>
+      <Link href={homeRoute} dismissTo asChild>
         <Pressable style={styles.textarea}>
-            <Entypo name="arrow-with-circle-left" size={35} color="white" />
-            <Text style={styles.text}> Home </Text>
+          <Entypo name="arrow-with-circle-left" size={35} color="white" />
+          <Text style={styles.text}> Home </Text>
         </Pressable>
       </Link>
     </View>
@@ -37,6 +41,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     color: "white",
-    margin: 5
+    margin: 5,
   },
 });

@@ -4,6 +4,8 @@ import express from "express";
 import mongoose from "mongoose";
 import { registerUser, loginUser } from "../controllers/authController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import { createChat, getChats, deleteChat } from "../controllers/chatController.js";
+import { sendMessage, getMessages, markRead } from "../controllers/messageController.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -37,6 +39,16 @@ app.get("/me", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Chat routes (all need authMiddleware)
+app.post("/chats", authMiddleware, createChat);
+app.get("/chats", authMiddleware, getChats);
+app.delete("/chats/:chatId", authMiddleware, deleteChat);
+
+// Message routes
+app.post("/messages", authMiddleware, sendMessage);
+app.get("/messages/:chatId", authMiddleware, getMessages);
+app.patch("/messages/:messageId/read", authMiddleware, markRead);
 
 async function connectDB() {
   try {
