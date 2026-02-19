@@ -1,21 +1,48 @@
 import { colors } from "@/constants/colors";
-import { Link } from "expo-router";
-import React from "react";
+import { isAuthenticated, logoutUser } from "@/services/authService";
+import { Link, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function MainHeader() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await isAuthenticated();
+      setIsLoggedIn(authenticated);
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    setIsLoggedIn(false);
+    router.push("/");
+  };
+
   return (
-    <View style={styles.header}> 
-      <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
+    <View style={styles.header}>
+      <Image
+        source={require("@/assets/images/logo.png")}
+        style={styles.logo}
+      />
       <View>
         <Text style={styles.title}>SyncUp</Text>
         <Text style={styles.title2}>Chat, Connect, Collaborate</Text>
       </View>
-      <Link href="/login" push asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonLabel}>Login</Text>
+      {isLoggedIn ? (
+        <Pressable style={styles.button} onPress={handleLogout}>
+          <Text style={styles.buttonLabel}>Logout</Text>
         </Pressable>
-      </Link>
+      ) : (
+        <Link href="/login" push asChild>
+          <Pressable style={styles.button}>
+            <Text style={styles.buttonLabel}>Login</Text>
+          </Pressable>
+        </Link>
+      )}
     </View>
   );
 }

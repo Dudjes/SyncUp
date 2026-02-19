@@ -20,7 +20,7 @@ export default function ChatHeader() {
             <Feather name="filter" size={24} color="white" />
           </Pressable>
         </Link>
-        <Link href="/settings" push asChild>
+        <Link href="/chats/create" push asChild>
           <Pressable>
             <Feather name="plus" size={24} color="white" />
           </Pressable>
