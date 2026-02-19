@@ -2,6 +2,7 @@ import AuthHeader from "@/components/headers/AuthHeader";
 import MainButton from "@/components/ui/mainButton";
 import MainInput from "@/components/ui/mainInput";
 import { colors } from "@/constants/colors";
+import { registerUser } from "@/services/authService";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Checkbox from "expo-checkbox";
 import { Link, Stack, useRouter } from "expo-router";
@@ -19,14 +20,14 @@ import {
 export default function LoginScreen() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
+  const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [errors, setErrors] = useState({
     fullName: "",
-    username: "",
+    userName: "",
     email: "",
     password: "",
     terms: "",
@@ -35,7 +36,7 @@ export default function LoginScreen() {
   const validateForm = () => {
     const newErrors = {
       fullName: "",
-      username: "",
+      userName: "",
       email: "",
       password: "",
       terms: "",
@@ -45,8 +46,8 @@ export default function LoginScreen() {
       newErrors.fullName = "Full name is required";
     }
 
-    if (!username.trim()) {
-      newErrors.username = "Username is required";
+    if (!userName.trim()) {
+      newErrors.userName = "Username is required";
     }
 
     if (!email.trim()) {
@@ -70,24 +71,32 @@ export default function LoginScreen() {
   const isFormValid = () => {
     return (
       fullName.trim() !== "" &&
-      username.trim() !== "" &&
+      userName.trim() !== "" &&
       email.trim() !== "" &&
       password !== "" &&
       acceptTerms
     );
   };
 
-  const handleRegister = () => {
-    if (validateForm()) {
-      router.push({
-        pathname: "/(tabs)",
-        params: { email: email },
-      });
-    } else {
+  const handleRegister = async () => {
+    if (!validateForm()) {
       const firstError = Object.values(errors).find((e) => e !== "");
       if (firstError) {
         Alert.alert("Validation Error", firstError);
       }
+      return;
+    }
+
+    try {
+      await registerUser({ fullName, userName, email, password });
+      router.push({
+        pathname: "/(tabs)",
+        params: { email: email },
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Registration failed";
+      Alert.alert("Registration Error", message);
     }
   };
 
@@ -124,11 +133,11 @@ export default function LoginScreen() {
           label="Username"
           icon={<MaterialCommunityIcons name="at" size={24} color="black" />}
           example="johndoe"
-          value={username}
-          onChangeText={setUsername}
+          value={userName}
+          onChangeText={setUserName}
         />
-        {errors.username ? (
-          <Text style={styles.errorText}>{errors.username}</Text>
+        {errors.userName ? (
+          <Text style={styles.errorText}>{errors.userName}</Text>
         ) : null}
         <MainInput
           label="Email address"
