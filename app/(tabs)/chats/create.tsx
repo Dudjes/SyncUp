@@ -4,7 +4,7 @@ import MainInput from "@/components/ui/mainInput";
 import { colors } from "@/constants/colors";
 import { authenticatedFetch } from "@/services/api";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -16,6 +16,7 @@ import {
 } from "react-native";
 
 export default function CreateChatScreen() {
+  const router = useRouter();
   const [chatName, setChatName] = useState("");
   const [description, setDescription] = useState("");
   const [chatNameError, setChatNameError] = useState("");
@@ -34,21 +35,21 @@ export default function CreateChatScreen() {
 
     setIsLoading(true);
     try {
-      await authenticatedFetch('/chats', {
-        method: 'POST',
+      await authenticatedFetch("/chats", {
+        method: "POST",
         body: JSON.stringify({
           chatName: chatName,
           description: description,
-          chatImage: '',
-          chatType: 'group',
-        })
+          chatImage: "",
+          chatType: "group",
+        }),
       });
-      
+
       Alert.alert("Success", "Chat created successfully!");
-      setChatName("");
-      setDescription("");
+      router.back();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create chat";
+      const message =
+        err instanceof Error ? err.message : "Failed to create chat";
       Alert.alert("Error", message);
     } finally {
       setIsLoading(false);

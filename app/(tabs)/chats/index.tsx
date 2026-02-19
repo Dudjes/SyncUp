@@ -1,38 +1,72 @@
 import ChatHeader from "@/components/headers/ChatHeader";
 import ChatCard from "@/components/ui/chatCard";
 import { colors } from "@/constants/colors";
+import { authenticatedFetch } from "@/services/api";
 import Feather from "@expo/vector-icons/Feather";
-import { Stack } from "expo-router";
-import React from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Stack, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+interface Chat {
+  _id: string;
+  chatName: string;
+  lastMessage?: { text: string };
+  created_at: string;
+}
 
 export default function ChatsScreen() {
-  const chats = [
-    {
-      chatName: "Design Team",
-      lastMessage: "Let's review the wireframes tomorrow",
-      unreadMessages: 3,
-      lastMessageTime: "2m ago",
-    },
-    {
-      chatName: "Project Alpha",
-      lastMessage: "Pushed the latest build to staging",
-      unreadMessages: 0,
-      lastMessageTime: "10m ago",
-    },
-    {
-      chatName: "Sarah Wilson",
-      lastMessage: "Are we still on for 5?",
-      unreadMessages: 1,
-      lastMessageTime: "1h ago",
-    },
-    {
-      chatName: "Marketing Squad",
-      lastMessage: "Draft copy is ready for review",
-      unreadMessages: 5,
-      lastMessageTime: "Yesterday",
-    },
-  ];
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  //run when first opened
+  useEffect(() => {
+    loadChats();
+  }, []);
+
+  //run everytime screen is openened
+  useFocusEffect(
+    useCallback(() => {
+      loadChats();
+    }, []),
+  );
+
+  const loadChats = async () => {
+    try {
+      setLoading(true);
+      const response = await authenticatedFetch("/chats");
+      setChats(response.chats);
+    } catch (err) {
+      console.error("Load chats error:", err);
+      setError(err instanceof Error ? err.message : "Failed to load chats");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ header: () => <ChatHeader /> }} />
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ header: () => <ChatHeader /> }} />
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -49,9 +83,21 @@ export default function ChatsScreen() {
         </View>
       </View>
 
-      {chats.map((chat, index) => (
-        <ChatCard key={index} {...chat} />
-      ))}
+      {chats.length === 0 ? (
+        <Text style={styles.emptyText}>
+          No chats yet. Create one to get started!
+        </Text>
+      ) : (
+        chats.map((chat) => (
+          <ChatCard
+            key={chat._id}
+            chatName={chat.chatName}
+            lastMessage={chat.lastMessage?.text || "No messages yet"}
+            unreadMessages={0}
+            lastMessageTime={new Date(chat.created_at).toLocaleDateString()}
+          />
+        ))
+      )}
     </View>
   );
 }
@@ -90,5 +136,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.textPrimary,
     marginTop: 12,
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#ff4444",
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 20,
+    textAlign: "center",
   },
 });
