@@ -1,17 +1,29 @@
 import { Link } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import MainHeader from "@/components/headers/MainHeader";
-import MainButton from "@/components/ui/mainButton";
 import IndexCard from "@/components/ui/indexCard";
+import MainButton from "@/components/ui/mainButton";
 import { colors } from "@/constants/colors";
 
+import { isAuthenticated } from "@/services/authService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useRouter } from "expo-router";
 
+export default function HomeScreen() {
+  const router = useRouter();
 
-export default function App() {
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (await isAuthenticated()) {
+        router.replace("/(tabs)");
+      }
+    };
+    checkAuth();
+  }, []);
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <MainHeader />
@@ -178,7 +190,7 @@ const styles = StyleSheet.create({
     lineHeight: 40,
   },
   headingAccent: {
-    width: '100%',
+    width: "100%",
     height: 6,
     borderRadius: 999,
     backgroundColor: colors.accent,

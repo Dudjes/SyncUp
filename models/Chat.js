@@ -14,7 +14,9 @@ const chatSchema = new Schema(
   {
     chatName: { type: String, default: "" },
     chatImage: { type: String, default: "" },
+    description: { type: String, default: "" },
     members: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
+    groupCode: { type: Number, required: true },
     chatType: {
       type: String,
       required: true,

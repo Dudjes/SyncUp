@@ -4,7 +4,15 @@ import express from "express";
 import mongoose from "mongoose";
 import { registerUser, loginUser } from "../controllers/authController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { createChat, getChats, deleteChat } from "../controllers/chatController.js";
+import {
+  createChat,
+  getChats,
+  getChatById,
+  updateChat,
+  deleteChat,
+  addMemberToChat,
+  removeMemberFromChat,
+} from "../controllers/chatController.js";
 import { sendMessage, getMessages, markRead } from "../controllers/messageController.js";
 
 const app = express();
@@ -41,9 +49,13 @@ app.get("/me", authMiddleware, async (req, res) => {
 });
 
 // Chat routes (all need authMiddleware)
-app.post("/chats", authMiddleware, createChat);
-app.get("/chats", authMiddleware, getChats);
-app.delete("/chats/:chatId", authMiddleware, deleteChat);
+app.post("/chats", authMiddleware, createChat);           // Create chat
+app.get("/chats", authMiddleware, getChats);             // Get all user's chats
+app.get("/chats/:chatId", authMiddleware, getChatById);  // Get specific chat
+app.patch("/chats/:chatId", authMiddleware, updateChat); // Update chat
+app.delete("/chats/:chatId", authMiddleware, deleteChat);  // Delete chat
+app.post("/chats/:chatId/members", authMiddleware, addMemberToChat);      // Add member
+app.delete("/chats/:chatId/members", authMiddleware, removeMemberFromChat); // Remove member
 
 // Message routes
 app.post("/messages", authMiddleware, sendMessage);
