@@ -2,11 +2,12 @@ import AuthHeader from "@/components/headers/AuthHeader";
 import MainButton from "@/components/ui/mainButton";
 import MainInput from "@/components/ui/mainInput";
 import { colors } from "@/constants/colors";
+import { loginUser } from "@/services/authService";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Checkbox from "expo-checkbox";
 import { Link, Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ export default function LoginScreen() {
 
   const router = useRouter();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const nextEmailError = !email
       ? "Email is required"
       : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -30,8 +31,16 @@ export default function LoginScreen() {
     setEmailError(nextEmailError);
     setPasswordError(nextPasswordError);
 
-    if (!nextEmailError && !nextPasswordError) {
+    if (nextEmailError || nextPasswordError) {
+      return;
+    }
+
+    try {
+      const response = await loginUser({ email, password });
       router.push({ pathname: "/(tabs)", params: { email } });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Login failed";
+      Alert.alert("Login Error", message);
     }
   };
 

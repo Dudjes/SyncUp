@@ -14,5 +14,5 @@
     ".expo/models/**/*.ts",
     "expo-env.d.ts",
     ".expo/types/**/*.ts"
-  ]
+, "models/Message.js", "models/Chat.js"  ]
 }
