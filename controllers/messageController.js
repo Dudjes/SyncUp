@@ -1,5 +1,6 @@
 import { Chat } from "../models/Chat.js";
 import { Message } from "../models/Message.js";
+import { io } from "../SyncUpServer/server.js";
 
 export const sendMessage = async (req, res) => {
   const { text, chatId } = req.body;
@@ -34,6 +35,16 @@ export const sendMessage = async (req, res) => {
       sentAt: message.created_at,
     };
     await chat.save();
+
+    // Emit socket event for real-time message delivery
+    io.to(chatId).emit("receive_message", {
+      _id: message._id,
+      text: message.text,
+      userId: message.userId,
+      chatId: message.chatId,
+      created_at: message.created_at,
+      readby: message.readby,
+    });
 
     res.status(201).json({
       message: "Message sent successfully",
@@ -100,6 +111,13 @@ export const markRead = async (req, res) => {
 
     message.readby.push(userId);
     await message.save();
+
+    // Emit socket event for real-time read receipt
+    io.to(message.chatId.toString()).emit("message_read_update", {
+      messageId: message._id,
+      userId,
+      timestamp: new Date(),
+    });
 
     res.json({
       message: "Message marked as read",

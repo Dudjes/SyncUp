@@ -1,6 +1,8 @@
 import cors from "cors";
 import "dotenv/config";
 import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import mongoose from "mongoose";
 import { registerUser, loginUser } from "../controllers/authController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
@@ -15,7 +17,13 @@ import {
 } from "../controllers/chatController.js";
 import { sendMessage, getMessages, markRead } from "../controllers/messageController.js";
 
+
 const app = express();
+const httpsServer = createServer(app);
+const io = new Server(httpsServer, {
+  cors: {origin: "*"}
+});
+
 const PORT = process.env.PORT || 4000;
 
 app.use(cors());
@@ -62,6 +70,45 @@ app.post("/messages", authMiddleware, sendMessage);
 app.get("/messages/:chatId", authMiddleware, getMessages);
 app.patch("/messages/:messageId/read", authMiddleware, markRead);
 
+io.on("connection", (socket) => {
+  console.log("User connected", socket.id);
+
+  socket.on("join-room", (chatId) => {
+    socket.join(chatId);
+    console.log(`Socket ${socket.id} joined room ${chatId}`);
+  });
+
+  socket.on("leave-room", (chatId) =>{
+    socket.leave(chatId);
+  });
+
+  socket.on("send_message", async (data) => {
+    const {chatId, userId, text} = data;
+    io.to(chatId).emit("receive_message", {
+      chatId, 
+      userId, 
+      text, 
+      readBy: [],
+      created_at: new Date(),
+    });
+  });
+
+  socket.on("message_read", (data) => {
+    const {chatId, messageId, userId} = data;
+    io.to(chatId).emit("message_read_update", {
+      messageId,
+      userId,
+      timestamp: new Date()
+    });
+  });
+  
+  socket.on("disconnect", () => {
+    console.log("User disconnected", socket.id);
+  });
+})
+
+export {io};
+
 async function connectDB() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -73,7 +120,7 @@ async function connectDB() {
 }
 
 connectDB().then(() => {
-  app.listen(PORT, () => {
+  httpsServer.listen(PORT, () => {
     console.log(`Server running on http://127.0.0.1:${PORT}`);
   });
 });

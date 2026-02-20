@@ -3,7 +3,7 @@ import ChatCard from "@/components/ui/chatCard";
 import { colors } from "@/constants/colors";
 import { authenticatedFetch } from "@/services/api";
 import Feather from "@expo/vector-icons/Feather";
-import { Stack, useFocusEffect } from "expo-router";
+import { useRouter, Stack, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,6 +21,7 @@ interface Chat {
 }
 
 export default function ChatsScreen() {
+  const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -95,6 +96,7 @@ export default function ChatsScreen() {
             lastMessage={chat.lastMessage?.text || "No messages yet"}
             unreadMessages={0}
             lastMessageTime={new Date(chat.created_at).toLocaleDateString()}
+            onPress={() => router.push(`/(tabs)/chats/${chat._id}`)}
           />
         ))
       )}

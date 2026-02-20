@@ -1,5 +1,4 @@
 import { colors } from "@/constants/colors";
-import { Link } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -9,6 +8,7 @@ type ChatCardProps = {
   lastMessage: string;
   unreadMessages: number;
   lastMessageTime?: string;
+  onPress?: () => void;
 };
 
 const getInitials = (name: string) => {
@@ -27,38 +27,37 @@ export default function ChatCard({
   lastMessage = "Let's review the wireframes tomorrow",
   unreadMessages = 3,
   lastMessageTime = "2m ago",
+  onPress,
 }: ChatCardProps) {
   const initials = getInitials(chatName);
 
   return (
-    <Link href={"/"} push asChild>
-      <Pressable style={styles.card}>
-        <View style={styles.avatarWrap}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
-          </View>
-          <View style={styles.statusDot} />
+    <Pressable style={styles.card} onPress={onPress}>
+      <View style={styles.avatarWrap}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{initials}</Text>
         </View>
+        <View style={styles.statusDot} />
+      </View>
 
-        <View style={styles.content}>
-          <View style={styles.topRow}>
-            <Text style={styles.chatName} numberOfLines={1}>
-              {chatName}
-            </Text>
-            <Text style={styles.time}>{lastMessageTime}</Text>
-          </View>
-          <Text style={styles.lastMessage} numberOfLines={1}>
-            {lastMessage}
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <Text style={styles.chatName} numberOfLines={1}>
+            {chatName}
           </Text>
+          <Text style={styles.time}>{lastMessageTime}</Text>
         </View>
+        <Text style={styles.lastMessage} numberOfLines={1}>
+          {lastMessage}
+        </Text>
+      </View>
 
-        {unreadMessages > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{unreadMessages}</Text>
-          </View>
-        )}
-      </Pressable>
-    </Link>
+      {unreadMessages > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{unreadMessages}</Text>
+        </View>
+      )}
+    </Pressable>
   );
 }
 
