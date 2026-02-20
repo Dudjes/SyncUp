@@ -17,17 +17,17 @@ export default function ChatHeader() {
         {/* open filter dropdown*/}
         <Link href="/settings" push asChild>
           <Pressable>
-            <Feather name="filter" size={24} color="white" />
+            <Feather name="filter" size={20} color="white" />
           </Pressable>
         </Link>
         <Link href="/chats/create" push asChild>
           <Pressable>
-            <Feather name="plus" size={24} color="white" />
+            <Feather name="plus" size={20} color="white" />
           </Pressable>
         </Link>
         <Link href="/settings" push asChild>
           <Pressable>
-            <Feather name="settings" size={24} color="white" />
+            <Feather name="settings" size={20} color="white" />
           </Pressable>
         </Link>
       </View>
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   header: {
     width: "100%",
     alignSelf: "stretch",
-    height: 120,
+    height: 110,
     backgroundColor: colors.primary,
     flexDirection: "row",
     justifyContent: "flex-start",

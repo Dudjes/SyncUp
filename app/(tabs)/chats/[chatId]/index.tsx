@@ -1,9 +1,10 @@
+import ChatHeader from "@/components/headers/ChatHeader";
 import MessageCard from "@/components/ui/messageCard";
 import { colors } from "@/constants/colors";
 import { authenticatedFetch } from "@/services/api";
 import { getCurrentUser } from "@/services/authService";
 import Feather from "@expo/vector-icons/Feather";
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -41,6 +42,7 @@ export default function ChatDetailScreen() {
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const socketRef = useRef<Socket | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     loadMessages();
@@ -53,6 +55,15 @@ export default function ChatDetailScreen() {
       }
     };
   }, [chatId]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollViewRef.current && messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
 
   const connectSocket = () => {
     if (!chatId) return;
@@ -126,7 +137,7 @@ export default function ChatDetailScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={100}
     >
-      <ScrollView style={styles.messagesContainer}>
+      <ScrollView style={styles.messagesContainer} ref={scrollViewRef}>
         {loading ? (
           <ActivityIndicator
             size="large"
@@ -142,7 +153,7 @@ export default function ChatDetailScreen() {
               _id={msg._id}
               text={msg.text}
               userId={msg.userId._id}
-              senderName={msg.userId.fullName}
+              senderName={msg.userId.userName}
               senderImage={msg.userId.image}
               chatId={msg.chatId}
               created_at={new Date(msg.created_at)}
@@ -154,6 +165,7 @@ export default function ChatDetailScreen() {
       </ScrollView>
 
       <View style={styles.inputContainer}>
+        <Stack.Screen options={{ header: () => <ChatHeader /> }} />
         <TextInput
           style={styles.input}
           placeholder="Type a message..."
