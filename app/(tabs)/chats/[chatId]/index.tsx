@@ -3,13 +3,16 @@ import MessageCard from "@/components/ui/messageCard";
 import { colors } from "@/constants/colors";
 import { authenticatedFetch } from "@/services/api";
 import { getCurrentUser } from "@/services/authService";
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import Feather from "@expo/vector-icons/Feather";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -34,17 +37,38 @@ interface Message {
   readby: string[];
 }
 
+interface Chat {
+  _id: string;
+  chatName: string;
+  description?: string;
+  chatImage?: string;
+  members: string[];
+}
+
 export default function ChatDetailScreen() {
   const { chatId } = useLocalSearchParams<{ chatId?: string }>();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [chat, setChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [modalVisible, setModalVisible] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "";
+    return (
+      (parts[0][0]?.toUpperCase() ?? "") +
+      (parts[parts.length - 1][0]?.toUpperCase() ?? "")
+    );
+  };
+
   useEffect(() => {
+    loadChat();
     loadMessages();
     loadCurrentUser();
     connectSocket();
@@ -93,7 +117,18 @@ export default function ChatDetailScreen() {
     if (user?.userId) {
       setCurrentUserId(user.userId);
     }
-  }; // No need to reload - socket will receive the message
+  };
+
+  const loadChat = async () => {
+    if (!chatId) return;
+
+    try {
+      const response = await authenticatedFetch(`/chats/${chatId}`);
+      setChat(response.chat);
+    } catch (err) {
+      console.error("Load chat error:", err);
+    }
+  };
 
   const loadMessages = async () => {
     if (!chatId) return;
@@ -137,6 +172,52 @@ export default function ChatDetailScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={100}
     >
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: chat?.chatName || "Chat",
+          headerStyle: {
+            backgroundColor: "#fff",
+          },
+          headerTintColor: colors.primary,
+          headerTitleStyle: {
+            fontWeight: "600",
+            fontSize: 18,
+          },
+        }}
+      />
+      {/* Second header about the chat */}
+      {chat && (
+        <View style={styles.chatInfoHeader}>
+          <Link href={"/(tabs)/chats"} style={styles.backButton}>
+            <AntDesign name="arrow-left" size={20} color="black" />
+          </Link>
+          <View style={styles.chatImageContainer}>
+            {chat.chatImage && chat.chatImage.includes?.("://") ? (
+              <Image
+                source={{ uri: chat.chatImage }}
+                style={styles.chatImage}
+              />
+            ) : (
+              <Text style={styles.chatImageText}>
+                {chat.chatImage || getInitials(chat.chatName)}
+              </Text>
+            )}
+          </View>
+          <View style={styles.chatTextContainer}>
+            <Text style={styles.chatNameHeader}>{chat.chatName}</Text>
+            <Text style={styles.membersText}>
+              {chat.members?.length || 0}{" "}
+              {(chat.members?.length || 0) > 1 ? "members" : "member"}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <AntDesign name="info-circle" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Messages and body*/}
       <ScrollView style={styles.messagesContainer} ref={scrollViewRef}>
         {loading ? (
           <ActivityIndicator
@@ -164,6 +245,7 @@ export default function ChatDetailScreen() {
         )}
       </ScrollView>
 
+      {/* Message input bar */}
       <View style={styles.inputContainer}>
         <Stack.Screen options={{ header: () => <ChatHeader /> }} />
         <TextInput
@@ -182,6 +264,37 @@ export default function ChatDetailScreen() {
           <Feather name="send" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
+      <Modal
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+        transparent
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderInfo}>
+                <FontAwesome name="group" size={24} color="white" />
+                <View>
+                  <Text style={styles.modalHeaderTitle}>Chat Settings</Text>
+                  <Text style={styles.modalHeaderSubtitle}>
+                    {chat?.chatName}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={{ margin: 25 }}
+              >
+                <AntDesign name="close" size={35} color="white" />
+              </TouchableOpacity>
+            </View>
+            {/* body */}
+            <View>
+              <Text></Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -231,5 +344,95 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  chatInfoHeader: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    flexDirection: "row",
+  },
+  backButton: {
+    marginRight: 8,
+    padding: 4,
+  },
+  chatImageContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  chatTextContainer: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  chatImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  chatImageText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  chatNameHeader: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
+  membersText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "90%",
+    height: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  modalHeader: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 12,
+    backgroundColor: colors.backgroundDark,
+    height: "12%",
+    alignContent: "center",
+    justifyContent: "space-between",
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    flexDirection: "row",
+  },
+  modalHeaderInfo: {
+    margin: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  modalHeaderTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  modalHeaderSubtitle: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.8)",
+    marginTop: 2,
   },
 });

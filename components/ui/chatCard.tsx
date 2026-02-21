@@ -1,6 +1,6 @@
 import { colors } from "@/constants/colors";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 type ChatCardProps = {
   chatImage?: string;
@@ -30,12 +30,17 @@ export default function ChatCard({
   onPress,
 }: ChatCardProps) {
   const initials = getInitials(chatName);
+  chatImage = chatImage || initials;
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.avatarWrap}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initials}</Text>
+          {chatImage.includes?.("://") ? (
+            <Image source={{ uri: chatImage }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{chatImage}</Text>
+          )}
         </View>
         <View style={styles.statusDot} />
       </View>
@@ -87,6 +92,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
+  },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   statusDot: {
     position: "absolute",
