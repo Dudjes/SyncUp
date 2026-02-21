@@ -3,7 +3,7 @@ import { getAuthHeaders } from "./authService";
 // Example of making a protected API call
 export const getProtectedData = async () => {
   const headers = await getAuthHeaders();
-  
+
   const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/protected`, {
     method: "GET",
     headers,
@@ -19,10 +19,18 @@ export const getProtectedData = async () => {
 // Generic helper for authenticated requests
 export const authenticatedFetch = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ) => {
   const headers = await getAuthHeaders();
-  
+
+  console.log(
+    `Making request to: ${process.env.EXPO_PUBLIC_API_URL}${endpoint}`,
+    {
+      method: options.method || "GET",
+      hasBody: !!options.body,
+    },
+  );
+
   const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -31,9 +39,20 @@ export const authenticatedFetch = async (
     },
   });
 
+  console.log(`Response status: ${res.status} ${res.statusText}`);
+
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(error.message || "Request failed");
+    let errorMessage = `Request failed with status ${res.status}`;
+    try {
+      const error = await res.json();
+      errorMessage = error.message || errorMessage;
+      console.log("Server error response:", error);
+    } catch (parseError) {
+      console.log("Could not parse error response:", parseError);
+      const text = await res.text();
+      console.log("Raw error response:", text);
+    }
+    throw new Error(errorMessage);
   }
 
   return await res.json();

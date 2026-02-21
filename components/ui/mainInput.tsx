@@ -13,29 +13,41 @@ export default function mainInput({
   value,
   onChangeText,
   error,
+  width = "80%",
+  height,
 }: {
   label: string;
-  icon: React.ReactNode;
-  example: string;
+  icon?: React.ReactNode;
+  example?: string;
   isPassword?: boolean;
   value: string;
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
   error?: string;
+  width?: number | `${number}%`;
+  height?: number | `${number}%`;
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width: width }]}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputContainer, error && styles.inputError]}>
+      <View
+        style={[
+          styles.inputContainer,
+          error && styles.inputError,
+          { height: height },
+        ]}
+      >
         <View style={styles.iconContainer}>{icon}</View>
         <TextInput
           placeholder={example}
           placeholderTextColor={colors.textSecondary}
-          style={styles.input}
+          style={[styles.input, { height: height ? "100%" : undefined }]}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={isPassword && !isPasswordVisible}
+          multiline={height ? true : false}
+          textAlignVertical={height ? "top" : "center"}
         />
         {isPassword && (
           <Pressable
@@ -58,7 +70,6 @@ export default function mainInput({
 const styles = StyleSheet.create({
   container: {
     margin: 12,
-    width: "80%",
   },
   label: {
     fontSize: 14,

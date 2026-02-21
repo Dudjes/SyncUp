@@ -8,12 +8,14 @@ export default function MainButton({
   txtColor = "white",
   borderColor = "black",
   onPress,
+  width = 300,
 }: {
   label: string;
   bgcolor?: string;
   txtColor?: string;
   borderColor?: string;
   onPress?: () => void;
+  width?: number | string;
 }) {
   return (
     <Pressable
@@ -22,6 +24,7 @@ export default function MainButton({
           ...styles.button,
           backgroundColor: bgcolor,
           borderColor: borderColor,
+          width: typeof width === "string" ? parseInt(width) : width,
         },
         pressed && styles.buttonPressed,
       ]}
@@ -35,7 +38,6 @@ export default function MainButton({
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
-    width: 300,
     borderRadius: 12,
     borderWidth: 1,
     margin: 5,

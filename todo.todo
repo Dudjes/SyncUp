@@ -1,0 +1,44 @@
+eigenaar kan users verwijderen via chat modal
+bij de crate chat page voeg een optie toe voor join via groepcode
+
+FriendPage:
+    Pagina heeft 2 opties zoals in de modal:
+        Friends
+        Requests (groep en friend)
+
+Settings:
+    User heeft meerdere opties:
+        Edit userInfo
+        notificaties aan of uit
+        darkmode aan of uit
+        verander wachtwoord
+
+        Admin dash als je owner role hebt:
+            totale users
+            berichten van vandaag totaal
+            gebruikers online
+            Users info:
+                afbeelding
+                naam
+                email
+                status (online ofline)
+                last seen
+                verwijder gebruiker
+                verander rol
+
+HomePagina logged:
+    Unread messages
+    Aantal active chats (berichten laatste 5 min)
+    Aantal chats waarin je zit
+    opties:
+        maak een nieuwe chat
+        check alle chats
+    recente activiteit (chats met meest recente berichten)
+
+Extra's:
+    filter voor chats
+    searchbar voor chats werkend maken
+
+
+
+    

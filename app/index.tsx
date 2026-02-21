@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   contentAlt: {
-    backgroundColor: "#FEF2F2",
+    backgroundColor: "white",
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: colors.border,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(185, 28, 28, 0.12)",
+    backgroundColor: "lightblue",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,

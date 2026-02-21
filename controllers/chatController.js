@@ -92,20 +92,23 @@ export const updateChat = async (req, res) => {
   const userId = req.user.userId;
 
   try {
+    console.log('Update chat request:', { chatId, chatName, description, userId });
     const chat = await Chat.findById(chatId);
 
     if (!chat) {
       return res.status(404).json({ message: "Chat not found" });
     }
 
+    console.log('Chat owner:', chat.owner.toString(), 'User ID:', userId);
+    
     // Only owner can update
     if (chat.owner.toString() !== userId) {
       return res.status(403).json({ message: "Only owner can update chat" });
     }
 
-    if (chatName) chat.chatName = chatName;
-    if(description) chat.description = description;
-    if (chatImage) chat.chatImage = chatImage;
+    if (chatName !== undefined) chat.chatName = chatName;
+    if (description !== undefined) chat.description = description;
+    if (chatImage !== undefined) chat.chatImage = chatImage;
 
     await chat.save();
 

@@ -19,7 +19,8 @@ export default function MainHeader() {
   const handleLogout = async () => {
     await logoutUser();
     setIsLoggedIn(false);
-    router.push("/");
+    router.dismissAll();
+    router.replace("/");
   };
 
   return (

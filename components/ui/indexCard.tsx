@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     margin: 10
   },
   cardBodyHover: {
-    borderColor: colors.error,
+    borderColor: colors.accentLight,
   },
   title: {
     fontSize: 20,
@@ -67,6 +67,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconWrapperHover: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.accentLight,
   },
 });

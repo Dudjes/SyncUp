@@ -3,7 +3,9 @@ export const colors = {
   primaryDark: "#111113",
   primaryLight: "#2C2C2E",
 
-  accent: "#B91C1C",       // deep crimson
+  accent: "#2563EB",       
+  accentLight: "#699bed",
+  accentDark: "#1E40AF",
 
   background: "#F4F4F5",
   surface: "#FFFFFF",

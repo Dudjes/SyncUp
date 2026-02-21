@@ -1,11 +1,18 @@
 import ChatHeader from "@/components/headers/ChatHeader";
+import MainButton from "@/components/ui/mainButton";
+import MainInput from "@/components/ui/mainInput";
 import MessageCard from "@/components/ui/messageCard";
 import { colors } from "@/constants/colors";
 import { authenticatedFetch } from "@/services/api";
 import { getCurrentUser } from "@/services/authService";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import {
+  AntDesign,
+  Entypo,
+  FontAwesome,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import Feather from "@expo/vector-icons/Feather";
-import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { Link, router, Stack, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -42,7 +49,20 @@ interface Chat {
   chatName: string;
   description?: string;
   chatImage?: string;
-  members: string[];
+  members: Member[];
+  owner?: string;
+  ownerId?: string;
+  created_at: Date;
+  groupCode?: number;
+}
+
+interface Member {
+  _id: string;
+  fullName: string;
+  userName?: string;
+  image?: string;
+  role: string;
+  lastSeen: Date;
 }
 
 export default function ChatDetailScreen() {
@@ -54,8 +74,24 @@ export default function ChatDetailScreen() {
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState("info");
+  const [chatName, setChatName] = useState("");
+  const [chatDescription, setChatDescription] = useState("");
   const socketRef = useRef<Socket | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const TAB_SWITCHER = [
+    {
+      key: "info",
+      label: "Info",
+      icon: <AntDesign name="info-circle" size={16} color={colors.accent} />,
+    },
+    {
+      key: "settings",
+      label: "Settings",
+      icon: <Feather name="settings" size={16} color="#000" />,
+    },
+  ];
 
   const getInitials = (name: string) => {
     const parts = name.trim().split(/\s+/);
@@ -88,6 +124,14 @@ export default function ChatDetailScreen() {
       }, 100);
     }
   }, [messages]);
+
+  //Initialize chat fields
+  useEffect(() => {
+    if (chat) {
+      setChatName(chat.chatName);
+      setChatDescription(chat.description ?? "");
+    }
+  }, [chat]);
 
   const connectSocket = () => {
     if (!chatId) return;
@@ -166,11 +210,46 @@ export default function ChatDetailScreen() {
     }
   };
 
+  const showAlert = () =>
+    Alert.alert(
+      "Chat deletion",
+      `Are you sure you want to delete ${chat?.chatName}`,
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Account deletion canceled"),
+          style: "cancel",
+        },
+        {
+          text: "Confirm",
+          onPress: async () => {
+            try {
+              await authenticatedFetch(`/chats/${chatId}`, {
+                method: "DELETE",
+                body: JSON.stringify({ chatId: chat?._id }),
+              });
+              router.dismissAll();
+              router.push("/chats");
+            } catch (error) {
+              console.error("Delete chat error:", error);
+              Alert.alert("Error", "Failed to delete chat");
+            }
+          },
+          style: "destructive",
+        },
+      ],
+    );
+
+  const ownerId = normalizeId(chat?.ownerId) || normalizeId(chat?.owner);
+  const isOwner = !!currentUserId && ownerId === currentUserId;
+  const memberInitials = "";
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={100}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      enabled
     >
       <Stack.Screen
         options={{
@@ -212,13 +291,19 @@ export default function ChatDetailScreen() {
             </Text>
           </View>
           <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <AntDesign name="info-circle" size={24} color="black" />
+            <AntDesign name="info-circle" size={24} color={colors.accent} />
           </TouchableOpacity>
         </View>
       )}
 
       {/* Messages and body*/}
-      <ScrollView style={styles.messagesContainer} ref={scrollViewRef}>
+      <ScrollView
+        style={styles.messagesContainer}
+        ref={scrollViewRef}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.messagesContent}
+      >
         {loading ? (
           <ActivityIndicator
             size="large"
@@ -264,6 +349,8 @@ export default function ChatDetailScreen() {
           <Feather name="send" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* Modal */}
       <Modal
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
@@ -288,7 +375,239 @@ export default function ChatDetailScreen() {
                 <AntDesign name="close" size={35} color="white" />
               </TouchableOpacity>
             </View>
-            {/* body */}
+            {/* info */}
+            <View style={styles.tabsContainer}>
+              <View style={styles.switcher}>
+                {TAB_SWITCHER.map((tab) => {
+                  const isActive = activeTab === tab.key;
+                  return (
+                    <TouchableOpacity
+                      key={tab.key}
+                      style={[styles.tab, isActive && styles.activeTab]}
+                      onPress={() => setActiveTab(tab.key)}
+                      activeOpacity={0.8}
+                    >
+                      {tab.icon}
+                      <Text
+                        style={[
+                          styles.tabLabel,
+                          isActive && styles.activeLabel,
+                        ]}
+                      >
+                        {tab.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.content}>
+                {activeTab === "info" ? (
+                  <ScrollView
+                    style={styles.settingsScroll}
+                    contentContainerStyle={styles.settingsContent}
+                  >
+                    <View style={{ width: "100%" }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          marginLeft: 10,
+                          marginBottom: 20,
+                        }}
+                      >
+                        <AntDesign
+                          name="info-circle"
+                          size={24}
+                          color={colors.accent}
+                        />
+                        <Text style={{ marginLeft: 10 }}>Description</Text>
+                      </View>
+                      <View style={{ marginLeft: 20 }}>
+                        <Text style={styles.input}>
+                          {chat?.description || "No description"}
+                        </Text>
+                      </View>
+                      <Text style={{ marginTop: 20, marginLeft: 10 }}>
+                        <FontAwesome
+                          name="calendar-o"
+                          size={20}
+                          color="black"
+                        />{" "}
+                        Created on{" "}
+                        {chat?.created_at
+                          ? new Date(chat.created_at).toLocaleDateString()
+                          : "N/A"}
+                      </Text>
+                      <View style={{ marginTop: 20, marginLeft: 10 }}>
+                        <Text style={{ fontWeight: 600, fontSize: 20 }}>
+                          <Feather name="users" size={20} color="black" />{" "}
+                          Members:
+                        </Text>
+                        {chat?.members.map((member) => (
+                          <View
+                            key={member._id}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              marginBottom: 12,
+                            }}
+                          >
+                            {member.image && member.image.includes?.("://") ? (
+                              <Image
+                                source={{ uri: member.image }}
+                                style={styles.avatarImage}
+                              />
+                            ) : (
+                              <View style={styles.avatarInitials}>
+                                <Text style={styles.avatarText}>
+                                  {getInitials(member.fullName)}
+                                </Text>
+                              </View>
+                            )}
+                            <View style={{ marginLeft: 12, flex: 1 }}>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  gap: 8,
+                                }}
+                              >
+                                <Text style={{ fontWeight: "600" }}>
+                                  {member.fullName}
+                                </Text>
+                                {member._id === ownerId && (
+                                  <View
+                                    style={{
+                                      backgroundColor: "black",
+                                      borderRadius: 20,
+                                      flexDirection: "row",
+                                      padding: 5,
+                                    }}
+                                  >
+                                    <MaterialCommunityIcons
+                                      name="crown"
+                                      size={12}
+                                      color="white"
+                                    />
+                                    <Text
+                                      style={{
+                                        color: "white",
+                                        fontSize: 10,
+                                        marginLeft: 4,
+                                      }}
+                                    >
+                                      Owner
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                              <Text
+                                style={{
+                                  fontSize: 12,
+                                  color: colors.textSecondary,
+                                }}
+                              >
+                                @{member.userName}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  </ScrollView>
+                ) : (
+                  <ScrollView
+                    style={styles.settingsScroll}
+                    contentContainerStyle={styles.settingsContent}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    <Text style={{ fontSize: 20, margin: 5 }}>
+                      Chat Configuration
+                    </Text>
+                    <View style={{ width: "100%", alignItems: "center" }}>
+                      <MainInput
+                        label="Chat name"
+                        value={chatName ?? ""}
+                        icon={<Entypo name="chat" size={24} color="black" />}
+                        onChangeText={setChatName}
+                      ></MainInput>
+                      <MainInput
+                        label="Chat description"
+                        value={chatDescription ?? ""}
+                        icon={<Entypo name="chat" size={24} color="black" />}
+                        onChangeText={setChatDescription}
+                        height={100}
+                      ></MainInput>
+                    </View>
+                    <View style={styles.groupCodeContainer}>
+                      <Text
+                        style={{
+                          fontSize: 18,
+                          fontWeight: "600",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <MaterialCommunityIcons
+                          name="key"
+                          size={18}
+                          color="black"
+                        />{" "}
+                        Group Code
+                      </Text>
+                      <Text style={styles.groupCodeText}>
+                        {chat?.groupCode || "N/A"}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={{ fontSize: 20, margin: 5 }}>Actions</Text>
+                      <View style={{ marginLeft: 0 }}>
+                        <MainButton
+                          label="Update chat"
+                          width={240}
+                          onPress={async () => {
+                            try {
+                              console.log("Updating chat:", {
+                                chatId,
+                                chatName,
+                                chatDescription,
+                              });
+                              await authenticatedFetch(`/chats/${chatId}`, {
+                                method: "PATCH",
+                                body: JSON.stringify({
+                                  chatName: chatName,
+                                  description: chatDescription,
+                                }),
+                              });
+                              Alert.alert(
+                                "Success",
+                                "Chat updated successfully",
+                              );
+                              setModalVisible(false);
+                              loadChat();
+                            } catch (err: any) {
+                              console.error("Update chat error:", err);
+                              Alert.alert(
+                                "Error",
+                                err.message || "Failed to update chat",
+                              );
+                            }
+                          }}
+                        ></MainButton>
+                        <TouchableOpacity
+                          onPress={showAlert}
+                          style={styles.deleteButton}
+                        >
+                          <Text style={styles.deleteButtonText}>
+                            Delete chat
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </ScrollView>
+                )}
+              </View>
+            </View>
+            {/* Members */}
             <View>
               <Text></Text>
             </View>
@@ -307,6 +626,9 @@ const styles = StyleSheet.create({
   messagesContainer: {
     flex: 1,
     backgroundColor: "#F9FAFB",
+  },
+  messagesContent: {
+    flexGrow: 1,
   },
   placeholder: {
     textAlign: "center",
@@ -330,11 +652,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     borderRadius: 20,
+    borderBlockColor: colors.accentLight,
+    borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
     maxHeight: 100,
     color: colors.textPrimary,
+    minWidth: 250,
   },
   sendButton: {
     marginLeft: 8,
@@ -411,7 +736,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     marginBottom: 12,
-    backgroundColor: colors.backgroundDark,
+    backgroundColor: colors.primary,
     height: "12%",
     alignContent: "center",
     justifyContent: "space-between",
@@ -435,4 +760,114 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.8)",
     marginTop: 2,
   },
+  switcher: {
+    width: "90%",
+    flexDirection: "row",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 12,
+    padding: 4,
+    marginHorizontal: 16,
+    marginVertical: 12,
+  },
+  tabsContainer: {
+    width: "100%",
+    flex: 1,
+    flexDirection: "column",
+  },
+  content: {
+    width: "100%",
+    flex: 1,
+    overflow: "hidden",
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  activeTab: {
+    backgroundColor: "#fff",
+    // Shadow for the "floating pill" effect
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#888",
+  },
+  activeLabel: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  avatarInitials: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  deleteButton: {
+    width: 240,
+    height: 50,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.error,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    marginLeft: 5,
+  },
+  deleteButtonText: {
+    color: colors.error,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  groupCodeContainer: {
+    backgroundColor: colors.background,
+    width: 180,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  groupCodeText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: colors.primary,
+    letterSpacing: 2,
+  },
+  settingsScroll: {
+    width: "100%",
+    flex: 1,
+  },
+  settingsContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 20,
+  },
 });
+
+type IdLike = string | { _id?: string } | undefined;
+
+const normalizeId = (v: IdLike) => (typeof v === "string" ? v : (v?._id ?? ""));
