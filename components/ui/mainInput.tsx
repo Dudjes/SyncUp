@@ -15,6 +15,7 @@ export default function mainInput({
   error,
   width = "80%",
   height,
+  editable = true,
 }: {
   label: string;
   icon?: React.ReactNode;
@@ -25,6 +26,7 @@ export default function mainInput({
   error?: string;
   width?: number | `${number}%`;
   height?: number | `${number}%`;
+  editable?: boolean;
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -48,6 +50,7 @@ export default function mainInput({
           secureTextEntry={isPassword && !isPasswordVisible}
           multiline={height ? true : false}
           textAlignVertical={height ? "top" : "center"}
+          editable={editable}
         />
         {isPassword && (
           <Pressable

@@ -240,6 +240,36 @@ export default function ChatDetailScreen() {
       ],
     );
 
+  const showLeaveAlert = () =>
+    Alert.alert(
+      "Leave chat",
+      `Are you sure you want to leave ${chat?.chatName}?`,
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Leave canceled"),
+          style: "cancel",
+        },
+        {
+          text: "Leave",
+          onPress: async () => {
+            try {
+              await authenticatedFetch(`/chats/${chatId}/members`, {
+                method: "DELETE",
+                body: JSON.stringify({ userId: currentUserId }),
+              });
+              router.dismissAll();
+              router.push("/chats");
+            } catch (error) {
+              console.error("Leave chat error:", error);
+              Alert.alert("Error", "Failed to leave chat");
+            }
+          },
+          style: "destructive",
+        },
+      ],
+    );
+
   const ownerId = normalizeId(chat?.ownerId) || normalizeId(chat?.owner);
   const isOwner = !!currentUserId && ownerId === currentUserId;
   const memberInitials = "";
@@ -529,80 +559,110 @@ export default function ChatDetailScreen() {
                         label="Chat name"
                         value={chatName ?? ""}
                         icon={<Entypo name="chat" size={24} color="black" />}
-                        onChangeText={setChatName}
+                        onChangeText={isOwner ? setChatName : undefined}
+                        editable={isOwner}
                       ></MainInput>
                       <MainInput
                         label="Chat description"
                         value={chatDescription ?? ""}
                         icon={<Entypo name="chat" size={24} color="black" />}
-                        onChangeText={setChatDescription}
+                        onChangeText={isOwner ? setChatDescription : undefined}
+                        editable={isOwner}
                         height={100}
                       ></MainInput>
                     </View>
-                    <View style={styles.groupCodeContainer}>
-                      <Text
-                        style={{
-                          fontSize: 18,
-                          fontWeight: "600",
-                          marginBottom: 8,
-                        }}
-                      >
-                        <MaterialCommunityIcons
-                          name="key"
-                          size={18}
-                          color="black"
-                        />{" "}
-                        Group Code
-                      </Text>
-                      <Text style={styles.groupCodeText}>
-                        {chat?.groupCode || "N/A"}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={{ fontSize: 20, margin: 5 }}>Actions</Text>
-                      <View style={{ marginLeft: 0 }}>
-                        <MainButton
-                          label="Update chat"
-                          width={240}
-                          onPress={async () => {
-                            try {
-                              console.log("Updating chat:", {
-                                chatId,
-                                chatName,
-                                chatDescription,
-                              });
-                              await authenticatedFetch(`/chats/${chatId}`, {
-                                method: "PATCH",
-                                body: JSON.stringify({
-                                  chatName: chatName,
-                                  description: chatDescription,
-                                }),
-                              });
-                              Alert.alert(
-                                "Success",
-                                "Chat updated successfully",
-                              );
-                              setModalVisible(false);
-                              loadChat();
-                            } catch (err: any) {
-                              console.error("Update chat error:", err);
-                              Alert.alert(
-                                "Error",
-                                err.message || "Failed to update chat",
-                              );
-                            }
-                          }}
-                        ></MainButton>
-                        <TouchableOpacity
-                          onPress={showAlert}
-                          style={styles.deleteButton}
-                        >
-                          <Text style={styles.deleteButtonText}>
-                            Delete chat
+                    {!isOwner && (
+                      <View style={styles.leaveSection}>
+                        <View style={styles.leaveHeader}>
+                          <Feather
+                            name="log-out"
+                            size={20}
+                            color={colors.error}
+                          />
+                          <Text style={styles.leaveSectionTitle}>
+                            Danger Zone
                           </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={showLeaveAlert}
+                          style={styles.leaveButton}
+                        >
+                          <MaterialCommunityIcons
+                            name="door-open"
+                            size={18}
+                            color={colors.error}
+                            style={{ marginRight: 8 }}
+                          />
+                          <Text style={styles.leaveButtonText}>Leave chat</Text>
                         </TouchableOpacity>
                       </View>
-                    </View>
+                    )}
+                    {isOwner && (
+                      <View>
+                        <View style={styles.groupCodeContainer}>
+                          <Text
+                            style={{
+                              fontSize: 18,
+                              fontWeight: "600",
+                              marginBottom: 8,
+                            }}
+                          >
+                            <MaterialCommunityIcons
+                              name="key"
+                              size={18}
+                              color={colors.accent}
+                            />{" "}
+                            Group Code
+                          </Text>
+                          <Text style={styles.groupCodeText}>
+                            {chat?.groupCode || "N/A"}
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 20, margin: 5 }}>Actions</Text>
+                        <View style={{ marginLeft: 0 }}>
+                          <MainButton
+                            label="Update chat"
+                            width={240}
+                            onPress={async () => {
+                              try {
+                                console.log("Updating chat:", {
+                                  chatId,
+                                  chatName,
+                                  chatDescription,
+                                });
+                                await authenticatedFetch(`/chats/${chatId}`, {
+                                  method: "PATCH",
+                                  body: JSON.stringify({
+                                    chatName: chatName,
+                                    description: chatDescription,
+                                  }),
+                                });
+                                Alert.alert(
+                                  "Success",
+                                  "Chat updated successfully",
+                                );
+                                setModalVisible(false);
+                                loadChat();
+                              } catch (err: any) {
+                                console.error("Update chat error:", err);
+                                Alert.alert(
+                                  "Error",
+                                  err.message || "Failed to update chat",
+                                );
+                              }
+                            }}
+                          ></MainButton>
+                          <TouchableOpacity
+                            onPress={showAlert}
+                            style={styles.deleteButton}
+                          >
+                            <Text style={styles.deleteButtonText}>
+                              Delete chat
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
                   </ScrollView>
                 )}
               </View>
@@ -865,6 +925,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     paddingBottom: 20,
+  },
+  leaveSection: {
+    width: "90%",
+    marginTop: 24,
+  },
+  leaveHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    gap: 8,
+  },
+  leaveSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.error,
+  },
+  leaveButton: {
+    width: "100%",
+    height: 50,
+    backgroundColor: "rgba(255, 107, 107, 0.1)",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.error,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  leaveButtonText: {
+    color: colors.error,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 

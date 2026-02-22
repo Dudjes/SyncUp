@@ -1,5 +1,4 @@
 eigenaar kan users verwijderen via chat modal
-bij de crate chat page voeg een optie toe voor join via groepcode
 
 FriendPage:
     Pagina heeft 2 opties zoals in de modal:

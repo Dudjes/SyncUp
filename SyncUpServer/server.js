@@ -10,6 +10,7 @@ import {
   createChat,
   getChats,
   getChatById,
+  getChatByGroupCode,
   updateChat,
   deleteChat,
   addMemberToChat,
@@ -60,6 +61,7 @@ app.get("/me", authMiddleware, async (req, res) => {
 app.post("/chats", authMiddleware, createChat);           // Create chat
 app.get("/chats", authMiddleware, getChats);             // Get all user's chats
 app.get("/chats/:chatId", authMiddleware, getChatById);  // Get specific chat
+app.get("/chats/groupcode/:groupCode", getChatByGroupCode); // Get chat ID by group code
 app.patch("/chats/:chatId", authMiddleware, updateChat); // Update chat
 app.delete("/chats/:chatId", authMiddleware, deleteChat);  // Delete chat
 app.post("/chats/:chatId/members", authMiddleware, addMemberToChat);      // Add member

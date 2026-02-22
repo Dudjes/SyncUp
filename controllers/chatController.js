@@ -3,7 +3,13 @@ import { Chat } from "../models/Chat.js";
 const generateGroupCode = () => Math.floor(100000 + Math.random() * 900000);
 
 export const createChat = async (req, res) => {
-  const { chatName, description, chatImage, chatType = "group", groupCode = generateGroupCode() } = req.body;
+  const {
+    chatName,
+    description,
+    chatImage,
+    chatType = "group",
+    groupCode = generateGroupCode(),
+  } = req.body;
   const userId = req.user.userId;
 
   try {
@@ -86,21 +92,48 @@ export const getChatById = async (req, res) => {
   }
 };
 
+export const getChatByGroupCode = async (req, res) => {
+  const { groupCode } = req.params;
+
+  try {
+    const chat = await Chat.findOne({ groupCode: parseInt(groupCode) });
+
+    if (!chat) {
+      return res
+        .status(404)
+        .json({ message: "Chat not found with this group code" });
+    }
+
+    res.json({
+      message: "Chat found",
+      chatId: chat._id,
+    });
+  } catch (err) {
+    console.error("Get chat by group code error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 export const updateChat = async (req, res) => {
   const { chatId } = req.params;
   const { chatName, description, chatImage } = req.body;
   const userId = req.user.userId;
 
   try {
-    console.log('Update chat request:', { chatId, chatName, description, userId });
+    console.log("Update chat request:", {
+      chatId,
+      chatName,
+      description,
+      userId,
+    });
     const chat = await Chat.findById(chatId);
 
     if (!chat) {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    console.log('Chat owner:', chat.owner.toString(), 'User ID:', userId);
-    
+    console.log("Chat owner:", chat.owner.toString(), "User ID:", userId);
+
     // Only owner can update
     if (chat.owner.toString() !== userId) {
       return res.status(403).json({ message: "Only owner can update chat" });
@@ -161,10 +194,11 @@ export const addMemberToChat = async (req, res) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    // Check if user is owner or member
+    // Allow user to add themselves, or owner/members to add others
     if (
-      chat.owner.toString() !== userId &&
-      !chat.members.some((member) => member.toString() === userId)
+      newMemberId !== userId && // User adding themselves is always allowed
+      chat.owner.toString() !== userId && // Owner can add anyone
+      !chat.members.some((member) => member.toString() === userId) // Members can add others
     ) {
       return res.status(403).json({ message: "Unauthorized" });
     }
@@ -199,13 +233,16 @@ export const removeMemberFromChat = async (req, res) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    // Only owner can remove members
-    if (chat.owner.toString() !== userId) {
-      return res.status(403).json({ message: "Only owner can remove members" });
+    // Allow user to remove themselves, or owner to remove any member
+    if (
+      memberToRemove !== userId && // User removing themselves is always allowed
+      chat.owner.toString() !== userId // Only owner can remove others
+    ) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
     chat.members = chat.members.filter(
-      (member) => member.toString() !== memberToRemove
+      (member) => member.toString() !== memberToRemove,
     );
     await chat.save();
 
