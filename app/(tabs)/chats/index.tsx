@@ -92,6 +92,7 @@ export default function ChatsScreen() {
         chats.map((chat) => (
           <ChatCard
             key={chat._id}
+            chatId={chat._id}
             chatName={chat.chatName}
             lastMessage={chat.lastMessage?.text || "No messages yet"}
             unreadMessages={0}

@@ -12,12 +12,14 @@ import {
   getChatByGroupCode,
   getChatById,
   getChats,
+  getTotalUnreadMessages,
   getUnreadMessages,
   removeMemberFromChat,
   updateChat,
 } from "../controllers/chatController.js";
 import {
   getMessages,
+  markAllMessagesRead,
   markRead,
   sendMessage,
 } from "../controllers/messageController.js";
@@ -77,18 +79,20 @@ app.get("/me", authMiddleware, async (req, res) => {
 // Chat routes (all need authMiddleware)
 app.post("/chats", authMiddleware, createChat); // Create chat
 app.get("/chats", authMiddleware, getChats); // Get all user's chats
+app.get("/chats/unread", authMiddleware, getTotalUnreadMessages); // Get total unread messages
+app.get("/chats/unread/:chatId", authMiddleware, getUnreadMessages); // Get unread messages per chat
 app.get("/chats/:chatId", authMiddleware, getChatById); // Get specific chat
 app.get("/chats/groupcode/:groupCode", getChatByGroupCode); // Get chat ID by group code
 app.patch("/chats/:chatId", authMiddleware, updateChat); // Update chat
 app.delete("/chats/:chatId", authMiddleware, deleteChat); // Delete chat
 app.post("/chats/:chatId/members", authMiddleware, addMemberToChat); // Add member
 app.delete("/chats/:chatId/members", authMiddleware, removeMemberFromChat); // Remove member
-app.get("/chats/unread", authMiddleware, getUnreadMessages); // Get unread messages per chat
 
 // Message routes
 app.post("/messages", authMiddleware, sendMessage);
 app.get("/messages/:chatId", authMiddleware, getMessages);
 app.patch("/messages/:messageId/read", authMiddleware, markRead);
+app.patch("/messages/:chatId/read-all", authMiddleware, markAllMessagesRead);
 
 //User routes
 app.get("/users/me", authMiddleware, getUserProfile); // Get current user profile

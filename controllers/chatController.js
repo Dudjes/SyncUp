@@ -257,39 +257,73 @@ export const removeMemberFromChat = async (req, res) => {
 };
 
 export const getUnreadMessages = async (req, res) => {
+  const { chatId } = req.params;
   const userId = req.user.userId;
 
   try {
     // Import Message model
     const { Message } = await import("../models/Message.js");
 
-    // Get all chats where user is a member
-    const chats = await Chat.find({ members: userId }).select("_id chatName chatImage");
-
-    // Get unread message count for each chat
-    const unreadMessagesPerChat = await Promise.all(
-      chats.map(async (chat) => {
-        const unreadCount = await Message.countDocuments({
-          chatId: chat._id,
-          userId: { $ne: userId }, // Exclude messages sent by the user
-          readby: { $ne: userId }, // Messages not read by the user
-        });
-
-        return {
-          chatId: chat._id,
-          chatName: chat.chatName,
-          chatImage: chat.chatImage,
-          unreadCount,
-        };
-      })
+    // Verify chat exists and user is a member
+    const chat = await Chat.findById(chatId).select(
+      "_id chatName chatImage members",
     );
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    // Check if user is a member
+    if (!chat.members.some((member) => member.toString() === userId)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Get unread message count for this chat
+    const unreadCount = await Message.countDocuments({
+      chatId: chat._id,
+      userId: { $ne: userId }, // Exclude messages sent by the user
+      readby: { $ne: userId }, // Messages not read by the user
+    });
 
     res.json({
       message: "Unread messages retrieved successfully",
-      data: unreadMessagesPerChat,
+      data: {
+        chatId: chat._id,
+        chatName: chat.chatName,
+        chatImage: chat.chatImage,
+        unreadCount,
+      },
     });
   } catch (err) {
     console.error("Get unread messages error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
-}
+};
+
+export const getTotalUnreadMessages = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const { Message } = await import("../models/Message.js");
+
+    const chats = await Chat.find({ members: userId }).select("_id");
+    const chatIds = chats.map((chat) => chat._id);
+
+    if (chatIds.length === 0) {
+      return res.status(200).json({ unreadCount: 0 });
+    }
+
+    const unreadCount = await Message.countDocuments({
+      chatId: { $in: chatIds },
+      userId: { $ne: userId },
+      readby: { $ne: userId },
+    });
+
+    return res.status(200).json({
+      unreadCount,
+    });
+  } catch (err) {
+    console.error("Get unread messages error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

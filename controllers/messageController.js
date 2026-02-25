@@ -128,3 +128,52 @@ export const markRead = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+export const markAllMessagesRead = async (req, res) => {
+  const { chatId } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    const chat = await Chat.findById(chatId);
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    // Check if user is member
+    if (!chat.members.some((member) => member.toString() === userId)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Find all unread messages for this user in this chat
+    const unreadMessages = await Message.find({
+      chatId,
+      readby: { $ne: userId },
+    });
+
+    // Mark all as read
+    const updatePromises = unreadMessages.map(async (message) => {
+      if (!message.readby.includes(userId)) {
+        message.readby.push(userId);
+        await message.save();
+        
+        // Emit socket event for each message
+        io.to(chatId).emit("message_read_update", {
+          messageId: message._id,
+          userId,
+          timestamp: new Date(),
+        });
+      }
+    });
+
+    await Promise.all(updatePromises);
+
+    res.json({
+      message: "All messages marked as read",
+      count: unreadMessages.length,
+    });
+  } catch (err) {
+    console.error("Mark all messages read error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

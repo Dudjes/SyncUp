@@ -181,10 +181,25 @@ export default function ChatDetailScreen() {
       setLoading(true);
       const response = await authenticatedFetch(`/messages/${chatId}`);
       setMessages(response.messages);
+
+      // Mark all messages as read after loading
+      await markMessagesAsRead();
     } catch (err) {
       console.error("Load messages error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const markMessagesAsRead = async () => {
+    if (!chatId) return;
+
+    try {
+      await authenticatedFetch(`/messages/${chatId}/read-all`, {
+        method: "PATCH",
+      });
+    } catch (err) {
+      console.error("Mark messages as read error:", err);
     }
   };
 

@@ -1,12 +1,14 @@
 import { colors } from "@/constants/colors";
-import React from "react";
+import { authenticatedFetch } from "@/services/api";
+import React, { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 type ChatCardProps = {
+  chatId: string;
   chatImage?: string;
   chatName: string;
   lastMessage: string;
-  unreadMessages: number;
+  unreadMessages?: number;
   lastMessageTime?: string;
   onPress?: () => void;
 };
@@ -21,16 +23,37 @@ const getInitials = (name: string) => {
   );
 };
 
+const getUnreadMessages = async (chatId: string) => {
+  try {
+    const response = await authenticatedFetch(`/chats/unread/${chatId}`);
+    return response.data.unreadCount;
+  } catch (error) {
+    console.error("Error fetching unread messages:", error);
+    return 0;
+  }
+};
+
 export default function ChatCard({
+  chatId,
   chatImage,
   chatName = "Design Team",
   lastMessage = "Let's review the wireframes tomorrow",
-  unreadMessages = 3,
+  unreadMessages: initialUnreadMessages = 0,
   lastMessageTime = "2m ago",
   onPress,
 }: ChatCardProps) {
+  const [unreadMessages, setUnreadMessages] = useState(initialUnreadMessages);
   const initials = getInitials(chatName);
   chatImage = chatImage || initials;
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      const count = await getUnreadMessages(chatId);
+      setUnreadMessages(count);
+    };
+
+    fetchUnreadCount();
+  }, [chatId]);
 
   return (
     <Pressable style={styles.card} onPress={onPress}>
