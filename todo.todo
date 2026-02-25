@@ -1,9 +1,5 @@
 eigenaar kan users verwijderen via chat modal
-
-FriendPage:
-    Pagina heeft 2 opties zoals in de modal:
-        Friends
-        Requests (groep en friend)
+unread messages zijn zichtbaar bij chats index
 
 Settings:
     User heeft meerdere opties:
@@ -36,7 +32,9 @@ HomePagina logged:
 
 Extra's:
     filter voor chats
+    group requests
     searchbar voor chats werkend maken
+    een nieuw tab voor de gebruiker waarin ie zijn verstuurde requests kan zien en mogelijk stoppen.
 
 
 

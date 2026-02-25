@@ -27,7 +27,6 @@ export const registerUser = async (req, res) => {
       lastSeen: now,
       friends: [],
       friendcode: generateFriendCode(),
-      friendRequests: [],
       settings: { darkmode: false, language: "en" },
     });
     await user.save();
@@ -36,7 +35,7 @@ export const registerUser = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     res.status(201).json({
@@ -79,7 +78,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     res.status(200).json({

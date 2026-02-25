@@ -255,3 +255,41 @@ export const removeMemberFromChat = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+export const getUnreadMessages = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    // Import Message model
+    const { Message } = await import("../models/Message.js");
+
+    // Get all chats where user is a member
+    const chats = await Chat.find({ members: userId }).select("_id chatName chatImage");
+
+    // Get unread message count for each chat
+    const unreadMessagesPerChat = await Promise.all(
+      chats.map(async (chat) => {
+        const unreadCount = await Message.countDocuments({
+          chatId: chat._id,
+          userId: { $ne: userId }, // Exclude messages sent by the user
+          readby: { $ne: userId }, // Messages not read by the user
+        });
+
+        return {
+          chatId: chat._id,
+          chatName: chat.chatName,
+          chatImage: chat.chatImage,
+          unreadCount,
+        };
+      })
+    );
+
+    res.json({
+      message: "Unread messages retrieved successfully",
+      data: unreadMessagesPerChat,
+    });
+  } catch (err) {
+    console.error("Get unread messages error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+}

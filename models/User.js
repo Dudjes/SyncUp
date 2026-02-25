@@ -1,19 +1,5 @@
 import mongoose, { Schema } from "mongoose";
 
-const friendRequestSchema = new Schema(
-  {
-    sentBy: { type: Schema.Types.ObjectId, required: true, ref: "User" },
-    state: {
-      type: String,
-      required: true,
-      enum: ["pending", "accepted", "declined"],
-      default: "pending",
-    },
-    sentAt: { type: Date, required: true, default: Date.now },
-  },
-  { _id: false },
-);
-
 const userSettingsSchema = new Schema(
   {
     darkmode: { type: Boolean, required: true, default: false },
@@ -34,7 +20,6 @@ const userSchema = new Schema(
     lastSeen: { type: Date, required: true, default: Date.now },
     friends: [{ type: Schema.Types.ObjectId, ref: "User" }],
     friendcode: { type: Number, required: true },
-    friendRequests: { type: [friendRequestSchema], default: [] },
     settings: { type: userSettingsSchema, required: true },
   },
   { collection: "users" },

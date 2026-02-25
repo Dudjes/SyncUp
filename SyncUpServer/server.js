@@ -2,33 +2,50 @@ import cors from "cors";
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import mongoose from "mongoose";
-import { registerUser, loginUser } from "../controllers/authController.js";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { Server } from "socket.io";
+import { loginUser, registerUser } from "../controllers/authController.js";
 import {
-  createChat,
-  getChats,
-  getChatById,
-  getChatByGroupCode,
-  updateChat,
-  deleteChat,
   addMemberToChat,
+  createChat,
+  deleteChat,
+  getChatByGroupCode,
+  getChatById,
+  getChats,
+  getUnreadMessages,
   removeMemberFromChat,
+  updateChat,
 } from "../controllers/chatController.js";
-import { sendMessage, getMessages, markRead } from "../controllers/messageController.js";
-
+import {
+  getMessages,
+  markRead,
+  sendMessage,
+} from "../controllers/messageController.js";
+import {
+  acceptFriendRequest,
+  getFriendRequests,
+  getFriends,
+  getUserProfile,
+  rejectFriendRequest,
+  removeFriend,
+  sendFriendRequest,
+  updateUser,
+} from "../controllers/userController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const app = express();
 const httpsServer = createServer(app);
 const io = new Server(httpsServer, {
-  cors: {origin: "*"}
+  cors: { origin: "*" },
 });
 
 const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+// Make io available to controllers
+app.set("io", io);
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -58,19 +75,38 @@ app.get("/me", authMiddleware, async (req, res) => {
 });
 
 // Chat routes (all need authMiddleware)
-app.post("/chats", authMiddleware, createChat);           // Create chat
-app.get("/chats", authMiddleware, getChats);             // Get all user's chats
-app.get("/chats/:chatId", authMiddleware, getChatById);  // Get specific chat
+app.post("/chats", authMiddleware, createChat); // Create chat
+app.get("/chats", authMiddleware, getChats); // Get all user's chats
+app.get("/chats/:chatId", authMiddleware, getChatById); // Get specific chat
 app.get("/chats/groupcode/:groupCode", getChatByGroupCode); // Get chat ID by group code
 app.patch("/chats/:chatId", authMiddleware, updateChat); // Update chat
-app.delete("/chats/:chatId", authMiddleware, deleteChat);  // Delete chat
-app.post("/chats/:chatId/members", authMiddleware, addMemberToChat);      // Add member
+app.delete("/chats/:chatId", authMiddleware, deleteChat); // Delete chat
+app.post("/chats/:chatId/members", authMiddleware, addMemberToChat); // Add member
 app.delete("/chats/:chatId/members", authMiddleware, removeMemberFromChat); // Remove member
+app.get("/chats/unread", authMiddleware, getUnreadMessages); // Get unread messages per chat
 
 // Message routes
 app.post("/messages", authMiddleware, sendMessage);
 app.get("/messages/:chatId", authMiddleware, getMessages);
 app.patch("/messages/:messageId/read", authMiddleware, markRead);
+
+//User routes
+app.get("/users/me", authMiddleware, getUserProfile); // Get current user profile
+app.patch("/users/:userId", authMiddleware, updateUser); // Update user profile
+
+// Friend request routes
+app.post("/friends/requests", authMiddleware, sendFriendRequest); // Send friend request
+app.get("/friends/requests", authMiddleware, getFriendRequests); // Get pending requests
+app.post(
+  "/friends/requests/:requestId/accept",
+  authMiddleware,
+  acceptFriendRequest,
+); // Accept request
+app.delete("/friends/requests/:requestId", authMiddleware, rejectFriendRequest); // Reject request
+
+// Friend list routes
+app.get("/friends", authMiddleware, getFriends); // Get friends
+app.delete("/friends/:friendId", authMiddleware, removeFriend); // Remove friend
 
 io.on("connection", (socket) => {
   console.log("User connected", socket.id);
@@ -80,36 +116,36 @@ io.on("connection", (socket) => {
     console.log(`Socket ${socket.id} joined room ${chatId}`);
   });
 
-  socket.on("leave-room", (chatId) =>{
+  socket.on("leave-room", (chatId) => {
     socket.leave(chatId);
   });
 
   socket.on("send_message", async (data) => {
-    const {chatId, userId, text} = data;
+    const { chatId, userId, text } = data;
     io.to(chatId).emit("receive_message", {
-      chatId, 
-      userId, 
-      text, 
+      chatId,
+      userId,
+      text,
       readBy: [],
       created_at: new Date(),
     });
   });
 
   socket.on("message_read", (data) => {
-    const {chatId, messageId, userId} = data;
+    const { chatId, messageId, userId } = data;
     io.to(chatId).emit("message_read_update", {
       messageId,
       userId,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   });
-  
+
   socket.on("disconnect", () => {
     console.log("User disconnected", socket.id);
   });
-})
+});
 
-export {io};
+export { io };
 
 async function connectDB() {
   try {
