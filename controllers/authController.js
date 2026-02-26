@@ -48,6 +48,7 @@ export const registerUser = async (req, res) => {
         email: user.email,
         image: user.image,
         friendcode: user.friendcode,
+        role: user.role,
       },
     });
   } catch (err) {
@@ -91,6 +92,7 @@ export const loginUser = async (req, res) => {
         email: user.email,
         image: user.image,
         friendcode: user.friendcode,
+        role: user.role,
       },
     });
   } catch (err) {

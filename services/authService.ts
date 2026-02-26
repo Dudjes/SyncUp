@@ -35,6 +35,7 @@ interface LoginResponse {
     email: string;
     image: string;
     friendcode: number;
+    role: string;
   };
 }
 

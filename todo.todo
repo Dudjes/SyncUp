@@ -1,5 +1,4 @@
 eigenaar kan users verwijderen via chat modal
-unread messages zijn zichtbaar bij chats index
 
 Settings:
     User heeft meerdere opties:
@@ -21,20 +20,14 @@ Settings:
                 verwijder gebruiker
                 verander rol
 
-HomePagina logged:
-    Unread messages
-    Aantal active chats (berichten laatste 5 min)
-    Aantal chats waarin je zit
-    opties:
-        maak een nieuwe chat
-        check alle chats
-    recente activiteit (chats met meest recente berichten)
 
 Extra's:
     filter voor chats
     group requests
     searchbar voor chats werkend maken
     een nieuw tab voor de gebruiker waarin ie zijn verstuurde requests kan zien en mogelijk stoppen.
+    darkmode
+    notificaties
 
 
 
