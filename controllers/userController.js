@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 
 export const updateUser = async (req, res) => {
   const { userId } = req.params;
-  const { fullName, userName, email, password, role, image, settings } =
+  const { fullName, userName, email, role, image, settings } =
     req.body;
   const currentUserId = req.user.userId;
 
@@ -40,7 +40,6 @@ export const updateUser = async (req, res) => {
       "fullName",
       "userName",
       "email",
-      "password",
       "role",
       "image",
       "settings",
@@ -52,14 +51,10 @@ export const updateUser = async (req, res) => {
       }
     });
 
-    if (req.body.password) {
-      targetUser.password = await bcrypt.hash(req.body.password, 10);
-    }
 
     await targetUser.save();
 
     const updatedUser = targetUser.toObject();
-    delete updatedUser.password;
 
     return res
       .status(200)
@@ -291,3 +286,32 @@ export const removeFriend = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+export const changePassword = async (req, res) => {
+  const userId = req.user.userId;
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if(!user){
+      return res.status(404).json({message: "User not found"});
+    }
+
+    // Check if password is valid
+    const isPasswordvalid = await bcrypt.compare(currentPassword, user.password);
+
+    if(!isPasswordvalid){
+      return res.status(401).json({message: "Current password is incorrect"});
+    }
+
+    // Hash and save new pass
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.status(200).json({message: "Password succesfully updated"});
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+}

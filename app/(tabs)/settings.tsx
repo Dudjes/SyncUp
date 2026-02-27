@@ -1,10 +1,28 @@
 import AuthHeader from "@/components/headers/AuthHeader";
+import MainButton from "@/components/ui/mainButton";
+import MainInput from "@/components/ui/mainInput";
 import { colors } from "@/constants/colors";
+import { authenticatedFetch } from "@/services/api";
 import { getCurrentUser, logoutUser } from "@/services/authService";
-import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  AntDesign,
+  Entypo,
+  Feather,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface User {
   role: "owner" | "member" | string;
@@ -14,6 +32,8 @@ interface User {
 export default function SettingsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -22,19 +42,44 @@ export default function SettingsScreen() {
 
   const loadCurrentUser = async () => {
     const user = await getCurrentUser();
-    console.log("current user:", user);
     if (user) setCurrentUser(user);
   };
 
   const handleSignOut = async () => {
-    await logoutUser(); 
+    await logoutUser();
     router.dismissAll();
     router.replace("/login");
   };
 
+  const updatePassword = async () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    const userId = currentUser?.userId;
+    try {
+      const response = await authenticatedFetch(`/users/${userId}/password`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        }),
+      });
+
+      Alert.alert("Success", "Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setModalVisible(false);
+    } catch (err) {
+      console.error("Change password error:", err);
+      Alert.alert("Error", "Failed to change password");
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <AuthHeader />
+      <AuthHeader homeRoute="/" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -130,6 +175,52 @@ export default function SettingsScreen() {
           <Ionicons name="exit-outline" size={24} color={colors.error} />
           <Text style={styles.signoutText}>Sign out</Text>
         </Pressable>
+        <Modal
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+          transparent
+          animationType="fade"
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={{ flexDirection: "row" }}>
+                <Text style={{ fontSize: 20, fontWeight: 500, bottom: 20 }}>
+                  Change your password
+                </Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <Ionicons
+                    name="exit-outline"
+                    size={30}
+                    color={colors.error}
+                    style={{ bottom: 60, left: 15 }}
+                  />
+                </TouchableOpacity>
+              </View>
+              <MainInput
+                label="Current password"
+                example="password123"
+                icon={<AntDesign name="lock" size={24} color={colors.accent} />}
+                isPassword={true}
+                onChangeText={setCurrentPassword}
+                value={currentPassword}
+              />
+              <MainInput
+                label="New password"
+                example="password123"
+                icon={<Entypo name="new" size={24} color={colors.accent} />}
+                isPassword={true}
+                onChangeText={setNewPassword}
+                value={newPassword}
+              />
+              <MainButton
+                label="Update password"
+                bgcolor={colors.accentDark}
+                width={250}
+                onPress={updatePassword}
+              />
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </View>
   );
@@ -221,5 +312,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: colors.error,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    height: "60%",
+    minHeight: 400,
+    backgroundColor: colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
   },
 });

@@ -25,6 +25,7 @@ import {
 } from "../controllers/messageController.js";
 import {
   acceptFriendRequest,
+  changePassword,
   getFriendRequests,
   getFriends,
   getUserProfile,
@@ -97,6 +98,7 @@ app.patch("/messages/:chatId/read-all", authMiddleware, markAllMessagesRead);
 //User routes
 app.get("/users/me", authMiddleware, getUserProfile); // Get current user profile
 app.patch("/users/:userId", authMiddleware, updateUser); // Update user profile
+app.patch("/users/:userId/password", authMiddleware, changePassword); // Update user password
 
 // Friend request routes
 app.post("/friends/requests", authMiddleware, sendFriendRequest); // Send friend request
