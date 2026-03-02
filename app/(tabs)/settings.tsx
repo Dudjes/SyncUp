@@ -47,7 +47,6 @@ export default function SettingsScreen() {
 
   const handleSignOut = async () => {
     await logoutUser();
-    router.dismissAll();
     router.replace("/login");
   };
 
@@ -140,7 +139,7 @@ export default function SettingsScreen() {
             <View style={styles.cardHeader}>
               <Text style={styles.cardHeaderText}>Administration</Text>
             </View>
-            <Link href="/" asChild>
+            <Link href="/admin" asChild>
               <Pressable
                 style={({ pressed }) => [pressed && styles.cardBodyPressed]}
               >

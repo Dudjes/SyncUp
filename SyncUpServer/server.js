@@ -19,6 +19,7 @@ import {
 } from "../controllers/chatController.js";
 import {
   getMessages,
+  getMessagesTotalOfToday,
   markAllMessagesRead,
   markRead,
   sendMessage,
@@ -26,8 +27,11 @@ import {
 import {
   acceptFriendRequest,
   changePassword,
+  deleteUser,
+  getAllUsersInfo,
   getFriendRequests,
   getFriends,
+  getTotalUsers,
   getUserProfile,
   rejectFriendRequest,
   removeFriend,
@@ -91,6 +95,7 @@ app.delete("/chats/:chatId/members", authMiddleware, removeMemberFromChat); // R
 
 // Message routes
 app.post("/messages", authMiddleware, sendMessage);
+app.get("/messages/today", authMiddleware, getMessagesTotalOfToday);
 app.get("/messages/:chatId", authMiddleware, getMessages);
 app.patch("/messages/:messageId/read", authMiddleware, markRead);
 app.patch("/messages/:chatId/read-all", authMiddleware, markAllMessagesRead);
@@ -98,7 +103,10 @@ app.patch("/messages/:chatId/read-all", authMiddleware, markAllMessagesRead);
 //User routes
 app.get("/users/me", authMiddleware, getUserProfile); // Get current user profile
 app.patch("/users/:userId", authMiddleware, updateUser); // Update user profile
+app.delete("/users/:userId", authMiddleware, deleteUser); // Delete user
 app.patch("/users/:userId/password", authMiddleware, changePassword); // Update user password
+app.get("/users/total", authMiddleware, getTotalUsers); // Get total amount of users
+app.get("/users/info/:filter", authMiddleware, getAllUsersInfo); // Get all users there info with or without filter
 
 // Friend request routes
 app.post("/friends/requests", authMiddleware, sendFriendRequest); // Send friend request

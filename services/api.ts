@@ -49,8 +49,12 @@ export const authenticatedFetch = async (
       console.log("Server error response:", error);
     } catch (parseError) {
       console.log("Could not parse error response:", parseError);
-      const text = await res.text();
-      console.log("Raw error response:", text);
+      try {
+        const text = await res.clone().text();
+        console.log("Raw error response:", text);
+      } catch (textError) {
+        console.log("Could not read error response as text");
+      }
     }
     throw new Error(errorMessage);
   }

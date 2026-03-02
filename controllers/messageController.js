@@ -177,3 +177,20 @@ export const markAllMessagesRead = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+export const getMessagesTotalOfToday = async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0,0,0,0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23,59,59,999);
+
+    const total = await Message.countDocuments({
+      created_at: {$gte: startOfDay, $lte: endOfDay}, //greater then and less then
+    });
+    res.status(200).json({total});
+  } catch (err) {
+    res.status(500).json({ message: "Failed to get messages today", err });
+  }
+}

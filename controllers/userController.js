@@ -1,12 +1,10 @@
 import bcrypt from "bcryptjs";
 import { FriendRequest } from "../models/FriendRequest.js";
 import { User } from "../models/User.js";
-import mongoose from "mongoose";
 
 export const updateUser = async (req, res) => {
   const { userId } = req.params;
-  const { fullName, userName, email, role, image, settings } =
-    req.body;
+  const { fullName, userName, email, role, image, settings } = req.body;
   const currentUserId = req.user.userId;
 
   try {
@@ -50,7 +48,6 @@ export const updateUser = async (req, res) => {
         targetUser[field] = req.body[field];
       }
     });
-
 
     await targetUser.save();
 
@@ -101,7 +98,7 @@ export const sendFriendRequest = async (req, res) => {
         .json({ message: "Cannot send request to yourself" });
     }
 
-    if (user.friends.some(id => id.toString() === recipient._id.toString())) {
+    if (user.friends.some((id) => id.toString() === recipient._id.toString())) {
       return res.status(400).json({ message: "User is already a friend" });
     }
 
@@ -294,24 +291,109 @@ export const changePassword = async (req, res) => {
   try {
     const user = await User.findById(userId);
 
-    if(!user){
-      return res.status(404).json({message: "User not found"});
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Check if password is valid
-    const isPasswordvalid = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordvalid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
 
-    if(!isPasswordvalid){
-      return res.status(401).json({message: "Current password is incorrect"});
+    if (!isPasswordvalid) {
+      return res.status(401).json({ message: "Current password is incorrect" });
     }
 
     // Hash and save new pass
     user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
-    res.status(200).json({message: "Password succesfully updated"});
+    res.status(200).json({ message: "Password succesfully updated" });
   } catch (err) {
     console.error("Change password error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
-}
+};
+
+export const getTotalUsers = async (req, res) => {
+  try {
+    const total = await User.countDocuments();
+    res.status(200).json({ total });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to get total users", err });
+  }
+};
+
+export const getAllUsersInfo = async (req, res) => {
+  try {
+    const { filter } = req.params;
+
+    const searchFilter =
+      filter && filter !== "all"
+        ? {
+            $or: [
+              { fullName: { $regex: filter, $options: "i" } },
+              { userName: { $regex: filter, $options: "i" } },
+              { email: { $regex: filter, $options: "i" } },
+            ],
+          }
+        : {};
+
+    const users = await User.find(searchFilter).select("-password");
+
+    res.status(200).json({ users });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Failed to get users", error: err.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  const { userId } = req.params;
+  const currentUserId = req.user.userId;
+
+  try {
+    const currentUser = await User.findById(currentUserId);
+    const targetUser = await User.findById(userId);
+
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!currentUser) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Only admins can delete users
+    if (currentUser.role !== "owner") {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: Only admins can delete users" });
+    }
+
+    // Cannot delete yourself
+    if (userId === currentUserId) {
+      return res
+        .status(400)
+        .json({ message: "Cannot delete your own account" });
+    }
+
+    // Delete all friend requests involving this user
+    await FriendRequest.deleteMany({
+      $or: [{ sentBy: userId }, { sentTo: userId }],
+    });
+
+    // Remove user from all friends' friend lists
+    await User.updateMany({ friends: userId }, { $pull: { friends: userId } });
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Delete user error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

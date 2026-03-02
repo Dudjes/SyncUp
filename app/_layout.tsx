@@ -24,8 +24,15 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="login" options={{ headerShown: true, title: "Home" }} />
-      <Stack.Screen name="register" options={{ headerShown: true, title: "Home"}} />
+      <Stack.Screen
+        name="login"
+        options={{ headerShown: true, title: "Home" }}
+      />
+      <Stack.Screen
+        name="register"
+        options={{ headerShown: true, title: "Home" }}
+      />
+      <Stack.Screen name="admin" />
     </Stack>
   );
 }

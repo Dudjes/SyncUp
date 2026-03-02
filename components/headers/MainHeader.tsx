@@ -19,16 +19,12 @@ export default function MainHeader() {
   const handleLogout = async () => {
     await logoutUser();
     setIsLoggedIn(false);
-    router.dismissAll();
-    router.replace("/");
+    router.replace("/login");
   };
 
   return (
     <View style={styles.header}>
-      <Image
-        source={require("@/assets/images/logo.png")}
-        style={styles.logo}
-      />
+      <Image source={require("@/assets/images/logo.png")} style={styles.logo} />
       <View>
         <Text style={styles.title}>SyncUp</Text>
         <Text style={styles.title2}>Chat, Connect, Collaborate</Text>
@@ -75,7 +71,7 @@ const styles = StyleSheet.create({
     width: 75,
     height: 100,
     marginRight: -50,
-    marginLeft: -10
+    marginLeft: -10,
   },
   button: {
     backgroundColor: colors.primaryLight,
