@@ -45,9 +45,21 @@ export default function SettingsScreen() {
     if (user) setCurrentUser(user);
   };
 
-  const handleSignOut = async () => {
-    await logoutUser();
-    router.replace("/login");
+  const handleSignOut = () => {
+    Alert.alert("Are you sure you want to logout?", "", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Confirm",
+        style: "destructive",
+        onPress: async () => {
+          await logoutUser();
+          router.replace("/login");
+        },
+      },
+    ]);
   };
 
   const updatePassword = async () => {
@@ -182,16 +194,16 @@ export default function SettingsScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              <View style={{ flexDirection: "row" }}>
-                <Text style={{ fontSize: 20, fontWeight: 500, bottom: 20 }}>
-                  Change your password
-                </Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Change your password</Text>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
                   <Ionicons
                     name="exit-outline"
                     size={30}
                     color={colors.error}
-                    style={{ bottom: 60, left: 15 }}
                   />
                 </TouchableOpacity>
               </View>
@@ -326,5 +338,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 12,
+  },
+  modalHeader: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: colors.textPrimary,
   },
 });
