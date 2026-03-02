@@ -6,6 +6,7 @@ import { colors } from "@/constants/colors";
 import { authenticatedFetch } from "@/services/api";
 import { AntDesign, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
@@ -42,6 +43,7 @@ interface User {
 }
 
 export default function App() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("friends");
   const [User, setUser] = useState<User | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -151,6 +153,29 @@ export default function App() {
       ],
     );
 
+  const openPrivateChat = async (friendId: string) => {
+    try {
+      const response = await authenticatedFetch("/chats");
+      const chats = response.chats;
+
+      // Find the private chat with this friend
+      const privateChat = chats.find(
+        (chat: any) =>
+          chat.chatType === "private" &&
+          chat.members?.some((member: any) => member._id === friendId),
+      );
+
+      if (privateChat) {
+        router.push(`/(tabs)/chats/${privateChat._id}`);
+      } else {
+        Alert.alert("Chat not found", "No private chat found with this friend");
+      }
+    } catch (error) {
+      console.error("Open chat error:", error);
+      Alert.alert("Error", "Failed to open chat");
+    }
+  };
+
   const TAB_SWITCHER = [
     {
       key: "friends",
@@ -215,7 +240,10 @@ export default function App() {
                       </Text>
                     </View>
                     <View style={styles.actionButtons}>
-                      <Pressable style={styles.openChatButton}>
+                      <Pressable
+                        style={styles.openChatButton}
+                        onPress={() => openPrivateChat(friend._id)}
+                      >
                         <Text style={styles.openChatText}>Open chat</Text>
                       </Pressable>
                       <Pressable
@@ -377,7 +405,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     flexGrow: 1,
   },
   emptyText: {

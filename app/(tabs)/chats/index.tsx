@@ -16,6 +16,9 @@ import {
 interface Chat {
   _id: string;
   chatName: string;
+  chatImage?: string;
+  chatType: "private" | "group";
+  members: Array<{ _id: string; userName?: string; fullName?: string; image?: string }>;
   lastMessage?: { text: string };
   created_at: string;
 }
@@ -25,6 +28,7 @@ export default function ChatsScreen() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   //run when first opened
   useEffect(() => {
@@ -41,6 +45,10 @@ export default function ChatsScreen() {
   const loadChats = async () => {
     try {
       setLoading(true);
+      // Get current user profile
+      const userResponse = await authenticatedFetch("/users/me");
+      setCurrentUserId(userResponse._id);
+      
       const response = await authenticatedFetch("/chats");
       setChats(response.chats);
     } catch (err) {
@@ -49,6 +57,31 @@ export default function ChatsScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getDisplayName = (chat: Chat): string => {
+    if (chat.chatType === "private" && chat.members.length === 2) {
+      // For private chats, show the other person's name
+      const otherMember = chat.members.find(
+        (member) => member._id !== currentUserId
+      );
+      return (
+        otherMember?.userName ||
+        otherMember?.fullName ||
+        "Chat"
+      );
+    }
+    return chat.chatName;
+  };
+
+  const getDisplayImage = (chat: Chat): string | undefined => {
+    if (chat.chatType === "private" && chat.members.length === 2) {
+      const otherMember = chat.members.find(
+        (member) => member._id !== currentUserId
+      );
+      return otherMember?.image;
+    }
+    return chat.chatImage;
   };
 
   if (loading) {
@@ -93,7 +126,8 @@ export default function ChatsScreen() {
           <ChatCard
             key={chat._id}
             chatId={chat._id}
-            chatName={chat.chatName}
+            chatImage={getDisplayImage(chat)}
+            chatName={getDisplayName(chat)}
             lastMessage={chat.lastMessage?.text || "No messages yet"}
             unreadMessages={0}
             lastMessageTime={new Date(chat.created_at).toLocaleDateString()}

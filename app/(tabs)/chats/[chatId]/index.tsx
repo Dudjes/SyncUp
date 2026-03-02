@@ -54,6 +54,7 @@ interface Chat {
   ownerId?: string;
   created_at: Date;
   groupCode?: number;
+  chatType?: "private" | "group";
 }
 
 interface Member {
@@ -614,59 +615,63 @@ export default function ChatDetailScreen() {
                     )}
                     {isOwner && (
                       <View>
-                        <View style={styles.groupCodeContainer}>
-                          <Text
-                            style={{
-                              fontSize: 18,
-                              fontWeight: "600",
-                              marginBottom: 8,
-                            }}
-                          >
-                            <MaterialCommunityIcons
-                              name="key"
-                              size={18}
-                              color={colors.accent}
-                            />{" "}
-                            Group Code
-                          </Text>
-                          <Text style={styles.groupCodeText}>
-                            {chat?.groupCode || "N/A"}
-                          </Text>
-                        </View>
+                        {chat?.chatType !== "private" && (
+                          <View style={styles.groupCodeContainer}>
+                            <Text
+                              style={{
+                                fontSize: 18,
+                                fontWeight: "600",
+                                marginBottom: 8,
+                              }}
+                            >
+                              <MaterialCommunityIcons
+                                name="key"
+                                size={18}
+                                color={colors.accent}
+                              />{" "}
+                              Group Code
+                            </Text>
+                            <Text style={styles.groupCodeText}>
+                              {chat?.groupCode || "N/A"}
+                            </Text>
+                          </View>
+                        )}
                         <Text style={{ fontSize: 20, margin: 5 }}>Actions</Text>
                         <View style={{ marginLeft: 0 }}>
-                          <MainButton
-                            label="Update chat"
-                            width={240}
-                            onPress={async () => {
-                              try {
-                                console.log("Updating chat:", {
-                                  chatId,
-                                  chatName,
-                                  chatDescription,
-                                });
-                                await authenticatedFetch(`/chats/${chatId}`, {
-                                  method: "PATCH",
-                                  body: JSON.stringify({
-                                    chatName: chatName,
-                                    description: chatDescription,
-                                  }),
-                                });
-                                Alert.alert(
-                                  "Success",
-                                  "Chat updated successfully",
-                                );
-                                setModalVisible(false);
-                                loadChat();
-                              } catch (err: any) {
-                                console.error("Update chat error:", err);
-                                Alert.alert(
-                                  "Error",
-                                  err.message || "Failed to update chat",
-                                );
-                              }
-                            }}
-                          ></MainButton>
+                          {chat?.chatType !== "private" && (
+                            <MainButton
+                              label="Update chat"
+                              width={240}
+                              onPress={async () => {
+                                try {
+                                  console.log("Updating chat:", {
+                                    chatId,
+                                    chatName,
+                                    chatDescription,
+                                  });
+                                  await authenticatedFetch(`/chats/${chatId}`, {
+                                    method: "PATCH",
+                                    body: JSON.stringify({
+                                      chatName: chatName,
+                                      description: chatDescription,
+                                    }),
+                                  });
+                                  Alert.alert(
+                                    "Success",
+                                    "Chat updated successfully",
+                                  );
+                                  setModalVisible(false);
+                                  loadChat();
+                                } catch (err: any) {
+                                  console.error("Update chat error:", err);
+                                  Alert.alert(
+                                    "Error",
+                                    err.message || "Failed to update chat",
+                                  );
+                                }
+                              }}
+                            ></MainButton>
+                          )}
                           <TouchableOpacity
                             onPress={showAlert}
                             style={styles.deleteButton}

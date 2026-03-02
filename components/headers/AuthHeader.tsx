@@ -1,23 +1,27 @@
 import { colors } from "@/constants/colors";
-import { Link } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import Entypo from "@expo/vector-icons/Entypo";
 
 interface AuthHeaderProps {
-  homeRoute?: "/" | "/login" | "/register" | "/chats/";
+  homeRoute?: Href;
 }
 
 export default function AuthHeader({ homeRoute = "/" }: AuthHeaderProps) {
+  const router = useRouter();
+
+  const handleNavigate = () => {
+    router.replace(homeRoute);
+  };
+
   return (
     <View style={styles.header}>
-      <Link href={homeRoute} dismissTo asChild>
-        <Pressable style={styles.textarea}>
-          <Entypo name="arrow-with-circle-left" size={35} color="white" />
-          <Text style={styles.text}> Home </Text>
-        </Pressable>
-      </Link>
+      <Pressable style={styles.textarea} onPress={handleNavigate}>
+        <Entypo name="arrow-with-circle-left" size={35} color="white" />
+        <Text style={styles.text}> Home </Text>
+      </Pressable>
     </View>
   );
 }

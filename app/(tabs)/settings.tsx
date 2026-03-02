@@ -78,7 +78,7 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <AuthHeader homeRoute="/" />
+      <AuthHeader homeRoute="/(tabs)" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

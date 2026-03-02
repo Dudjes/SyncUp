@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { Chat } from "../models/Chat.js";
 import { FriendRequest } from "../models/FriendRequest.js";
 import { User } from "../models/User.js";
 
@@ -86,6 +87,7 @@ export const sendFriendRequest = async (req, res) => {
   const { friendCode } = req.body;
 
   try {
+    const sender = await User.findById(userId);
     const recipient = await User.findOne({ friendcode: friendCode });
 
     if (!recipient) {
@@ -98,7 +100,7 @@ export const sendFriendRequest = async (req, res) => {
         .json({ message: "Cannot send request to yourself" });
     }
 
-    if (user.friends.some((id) => id.toString() === recipient._id.toString())) {
+    if (sender.friends.some((id) => id.toString() === recipient._id.toString())) {
       return res.status(400).json({ message: "User is already a friend" });
     }
 
@@ -216,6 +218,22 @@ export const acceptFriendRequest = async (req, res) => {
     request.state = "accepted";
     await request.save();
 
+    // Create a private chat between both users with the other person's name
+    const generateGroupCode = () => Math.floor(100000 + Math.random() * 900000);
+    const senderUser = await User.findById(senderId);
+    
+    const privateChat = new Chat({
+      chatName: senderUser.userName || senderUser.fullName, // Show sender's name to receiver
+      description: "",
+      chatImage: senderUser.image || "",
+      chatType: "private",
+      owner: receiverId,
+      members: [receiverId, senderId],
+      created_at: new Date(),
+      groupCode: generateGroupCode(),
+    });
+    await privateChat.save();
+
     // Emit socket events to both users
     const io = req.app.get("io");
     if (io) {
@@ -223,7 +241,7 @@ export const acceptFriendRequest = async (req, res) => {
       io.emit(`friend-request-${senderId}`, { type: "friend_added" });
     }
 
-    res.json({ message: "Friend request accepted" });
+    res.json({ message: "Friend request accepted", chat: privateChat });
   } catch (err) {
     console.error("Accept friend request error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
