@@ -29,6 +29,7 @@ export default function ChatsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   //run when first opened
   useEffect(() => {
@@ -84,6 +85,15 @@ export default function ChatsScreen() {
     return chat.chatImage;
   };
 
+  const filteredChats = chats.filter((chat) => {
+    if (!searchQuery.trim()) return true;
+    
+    const displayName = getDisplayName(chat).toLowerCase();
+    const searchTerm = searchQuery.toLowerCase();
+    
+    return displayName.includes(searchTerm);
+  });
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -113,6 +123,8 @@ export default function ChatsScreen() {
             style={styles.searchInput}
             placeholder="Search chats..."
             placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
         </View>
       </View>
@@ -121,8 +133,12 @@ export default function ChatsScreen() {
         <Text style={styles.emptyText}>
           No chats yet. Create one to get started!
         </Text>
+      ) : filteredChats.length === 0 ? (
+        <Text style={styles.emptyText}>
+          No chats match your search
+        </Text>
       ) : (
-        chats.map((chat) => (
+        filteredChats.map((chat) => (
           <ChatCard
             key={chat._id}
             chatId={chat._id}
