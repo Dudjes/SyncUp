@@ -84,7 +84,10 @@ export default function App() {
         setUser(response);
       }
     } catch (err) {
-      console.error("Load user error:", err);
+      Alert.alert(
+        "Error",
+        "Failed to load user data. Please check your connection.",
+      );
     }
   };
 
@@ -99,7 +102,8 @@ export default function App() {
       setModalVisible(false);
       loadCurrentUser();
     } catch (err) {
-      console.error("Send request error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to send friend request. Please try again.";
+      Alert.alert("Error", errorMessage);
     }
   };
 
@@ -110,7 +114,7 @@ export default function App() {
       });
       loadCurrentUser();
     } catch (err) {
-      console.error("Accept request error:", err);
+      Alert.alert("Error", "Failed to accept request. Please try again.");
     }
   };
 
@@ -121,7 +125,7 @@ export default function App() {
       });
       loadCurrentUser();
     } catch (err) {
-      console.error("Reject request error:", err);
+      Alert.alert("Error", "Failed to reject request. Please try again.");
     }
   };
 

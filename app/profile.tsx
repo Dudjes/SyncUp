@@ -70,7 +70,7 @@ export default function ProfileScreen() {
       }
 
       console.log("User profile updated successfully");
-      Alert.alert("Success", "Password updated successfully");
+      Alert.alert("Success", "Account updated successfully");
       router.replace("/settings");
     } catch (error) {
       console.error("Failed to update user profile:", error);
